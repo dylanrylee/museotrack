@@ -11,10 +11,11 @@ https://docs.djangoproject.com/en/5.1/ref/settings/
 """
 
 from pathlib import Path
+import os
+from django.db import connection
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
-
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.1/howto/deployment/checklist/
@@ -26,7 +27,6 @@ SECRET_KEY = 'django-insecure-x#0at)l==3ij)b)012(ze-bz+rta^q)7h6i&t2s$8p&6-pcb#&
 DEBUG = True
 
 ALLOWED_HOSTS = []
-
 
 # Application definition
 
@@ -44,7 +44,6 @@ INSTALLED_APPS = [
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:3000",  # Change this if React is hosted elsewhere
 ]
-
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
@@ -77,7 +76,6 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'backend.wsgi.application'
 
-
 # Database
 # https://docs.djangoproject.com/en/5.1/ref/settings/#databases
 
@@ -91,7 +89,6 @@ DATABASES = {
         'PORT': '3306',
     }
 }
-
 
 # Password validation
 # https://docs.djangoproject.com/en/5.1/ref/settings/#auth-password-validators
@@ -111,7 +108,6 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
-
 # Internationalization
 # https://docs.djangoproject.com/en/5.1/topics/i18n/
 
@@ -123,7 +119,6 @@ USE_I18N = True
 
 USE_TZ = True
 
-
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.1/howto/static-files/
 
@@ -133,3 +128,20 @@ STATIC_URL = 'static/'
 # https://docs.djangoproject.com/en/5.1/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+# Load museum_schema.sql at startup
+SQL_FILE_PATH = os.path.join(BASE_DIR, 'backend', 'sql', 'museum_schema.sql')
+
+if os.path.exists(SQL_FILE_PATH):
+    try:
+        with open(SQL_FILE_PATH, 'r', encoding='utf-8') as file:
+            sql_statements = file.read()
+
+        with connection.cursor() as cursor:
+            for statement in sql_statements.split(';'):
+                statement = statement.strip()
+                if statement:
+                    cursor.execute(statement)
+        print("✅ museum_schema.sql has been executed successfully.")
+    except Exception as e:
+        print(f"⚠️ Error executing museum_schema.sql: {e}")
