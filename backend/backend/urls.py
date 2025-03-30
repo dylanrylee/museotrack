@@ -16,10 +16,12 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path, include 
-from .views import sample_api  # Replace `my_app` with your actual app name
+from .views import sample_api 
+from .views import register_visitor
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('api/hello/', sample_api),  # Add your API endpoint
+    path('api/hello/', sample_api), 
+    path("register-visitor/", register_visitor, name="register-visitor"),
 ]
 
