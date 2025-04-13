@@ -1,13 +1,95 @@
 body {
-  margin: 0;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
-    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
-    sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
+  font-family: 'Merriweather';
+  font-weight: 300;
+  background-image: url('./backgrounds/04.jpg');
+  background-size: cover;
+  background-repeat: no-repeat;
+  background-attachment: fixed; 
+  background-position: center;
+  background-color: navy;
 }
 
-code {
-  font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
-    monospace;
+
+@media (orientation: landscape){
+  .content {
+      display: grid; 
+      place-items: center; 
+      background: rgba(0, 0, 0, 0.6);
+      position: fixed;
+      top: 30%;
+      height: 40%;
+      bottom: 30%;
+      width: 80%;
+      left: 10%;
+      right: 10%;
+      border-radius: 15px;
+      border-color: white;
+      border-style: solid;
+  }
+
+  .text{
+      width: 80%;
+      position: inherit;
+      top: 42%;
+      font-size: 35px;
+      margin: 10px;
+      padding: 3px;
+      color: white;
+      opacity: 1.0;
+      display: grid;
+      text-align: center;
+      overflow: auto;
+  }
+
+}
+
+@media (orientation: portrait){
+  .content {
+      display: grid; 
+      place-items: center; 
+      background: rgba(0, 0, 0, 0.6);
+      position: fixed;
+      top: 37%;
+      height: 26%;
+      bottom: 37%;
+      width: 80%;
+      left: 10%;
+      right: 10%;
+      border-radius: 15px;
+      border-color: white;
+      border-style: solid;
+  }
+
+  .text{
+      width: 80%;
+      position: inherit;
+      top: 45%;
+      font-size: 55px;
+      margin: 10px;
+      padding: 3px;
+      color: white;
+      opacity: 1.0;
+      display: grid;
+      text-align: center;
+      overflow: auto;
+  }
+}
+
+
+footer {
+  background: rgba(0, 0, 0, 0.6);
+  display: inline-block;
+  margin: 1%;
+  position: fixed;
+  right: 0px;
+  bottom: 0px;
+  animation: invis 5s, fadeIn2 8s;
+}
+
+.footertext{
+  color: white;
+  opacity: 1.0;
+  text-align: center;
+  margin: 3px;
+  animation: invis 5s, fadeIn2 8s;
 }
