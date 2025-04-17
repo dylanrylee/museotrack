@@ -10,6 +10,9 @@ import BrowseExhibits from './pages/BrowseExhibits';
 import BrowseMuseums from './pages/BrowseMuseums';
 import BrowseVisitors from './pages/BrowseVisitors';
 import BrowseArtists from './pages/BrowseArtists';
+import SupervisorLogin from './pages/SupervisorLogin';
+import SupervisorRegister from './pages/SupervisorRegister';
+import SupervisorHomepage from './pages/SupervisorHomepage';
 
 function App() {
   return (
@@ -24,6 +27,9 @@ function App() {
         <Route path="/browse-exhibits" element={<BrowseExhibits />} />
         <Route path="/browse-museums" element={<BrowseMuseums />} />
         <Route path="/browse-visitors" element={<BrowseVisitors />} />
+        <Route path="/supervisor-login" element={<SupervisorLogin />} />
+        <Route path="/supervisor-register" element={<SupervisorRegister />} />
+        <Route path="/supervisor-homepage" element={<SupervisorHomepage />} />
       </Routes>
     </Router>
   );

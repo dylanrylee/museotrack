@@ -43,6 +43,7 @@ def login_visitor(request):
     except Exception as e:
         return Response({"message": f"Server error: {str(e)}"}, status=500)
 
+# register visitor account
 @api_view(['POST'])
 def register_visitor(request):
     data = request.data
@@ -74,18 +75,140 @@ def register_visitor(request):
     except Exception as e:
         return Response({"message": str(e)}, status=400)
 
+@api_view(['POST'])
+def login_supervisor_employee(request):
+    email = request.data.get('email')
+    password = request.data.get('password')
+
+    try:
+        with connection.cursor() as cursor:
+            # Check if user exists
+            cursor.execute("SELECT Password FROM USER WHERE Email = %s", [email])
+            result = cursor.fetchone()
+
+        if not result:
+            return Response({"message": "Invalid email or password"}, status=401)
+
+        hashed_pw = result[0]
+        if not check_password(password, hashed_pw):
+            return Response({"message": "Invalid email or password"}, status=401)
+
+        with connection.cursor() as cursor:
+            # Check if supervisor
+            cursor.execute("SELECT * FROM SUPERVISOR WHERE SEmail = %s", [email])
+            if cursor.fetchone():
+                return Response({"message": "Supervisor login success", "role": "supervisor"}, status=200)
+
+            # Check if employee
+            cursor.execute("SELECT * FROM EMPLOYEE WHERE EEmail = %s", [email])
+            if cursor.fetchone():
+                return Response({"message": "Employee login success", "role": "employee"}, status=200)
+
+        return Response({"message": "User is not a staff member"}, status=403)
+
+    except Exception as e:
+        return Response({"message": f"Server error: {str(e)}"}, status=500)
+
+
 # Register account for supervisor
-def register_supervisor(s_email, first_name, middle_name, last_name, username, password, year_of_birth):
-    hashed_password = make_password(password)
+@api_view(['POST'])
+def register_supervisor(request):
+    try:
+        data = request.data
+        email = data.get('email')
+        password = make_password(data.get('password'))
+        first = data.get('firstName')
+        middle = data.get('middleName')
+        last = data.get('lastName')
+        username = data.get('username')
+        yob = data.get('yearOfBirth')
+        museum_name = data.get('museumName')
+        museum_address = data.get('museumAddress')
+
+        with connection.cursor() as cursor:
+            # Insert museum (ignore if already exists)
+            cursor.execute("""
+                INSERT IGNORE INTO MUSEUM (Address, Name)
+                VALUES (%s, %s)
+            """, [museum_address, museum_name])
+
+            # Insert user
+            cursor.execute("""
+                INSERT INTO USER (Email, First_Name, Middle_Name, Last_Name, Username, Password, Year_of_Birth)
+                VALUES (%s, %s, %s, %s, %s, %s, %s)
+            """, [email, first, middle, last, username, password, yob])
+
+            # Insert supervisor
+            cursor.execute("""
+                INSERT INTO SUPERVISOR (SEmail, MuseumAddress)
+                VALUES (%s, %s)
+            """, [email, museum_address])
+
+        return Response({"message": "Supervisor registered successfully"}, status=201)
+
+    except Exception as e:
+        return Response({"message": f"Server error: {str(e)}"}, status=500)
     
-    queries = [
-        ("INSERT INTO USER VALUES (%s, %s, %s, %s, %s, %s, %s)", 
-         [s_email, first_name, middle_name, last_name, username, hashed_password, year_of_birth]),
-        ("INSERT INTO SUPERVISOR VALUES (%s, NULL)", 
-         [s_email])
-    ]
-    
-    return execute_transaction(queries)
+@api_view(['GET'])
+def get_supervisor_info(request):
+    email = request.GET.get('email')
+
+    if not email:
+        return Response({"message": "Email is required"}, status=400)
+
+    try:
+        with connection.cursor() as cursor:
+            # Get username and museum address from USER and SUPERVISOR
+            cursor.execute("""
+                SELECT U.Username, S.MuseumAddress, M.Name
+                FROM USER U
+                JOIN SUPERVISOR S ON U.Email = S.SEmail
+                JOIN MUSEUM M ON S.MuseumAddress = M.Address
+                WHERE U.Email = %s
+            """, [email])
+
+            result = cursor.fetchone()
+
+            if not result:
+                return Response({"message": "Supervisor not found"}, status=404)
+
+            username, museum_address, museum_name = result
+
+        return Response({
+            "username": username,
+            "museum": museum_name,
+            "museumAddress": museum_address
+        })
+
+    except Exception as e:
+        return Response({"message": f"Server error: {str(e)}"}, status=500)
+
+
+@api_view(['GET'])
+def get_supervisor_employees(request):
+    email = request.GET.get('email')
+
+    if not email:
+        return Response({"message": "Email is required"}, status=400)
+
+    try:
+        with connection.cursor() as cursor:
+            # Get employees under this supervisor
+            cursor.execute("""
+                SELECT E.EEmail, U.Username
+                FROM EMPLOYEE E
+                JOIN USER U ON E.EEmail = U.Email
+                WHERE E.SEmail = %s
+            """, [email])
+
+            employees = cursor.fetchall()
+            employee_list = [{"email": e[0], "username": e[1]} for e in employees]
+
+        return Response({"employees": employee_list})
+
+    except Exception as e:
+        return Response({"message": f"Server error: {str(e)}"}, status=500)
+
 
 # Register account for employee
 def register_employee(e_email, first_name, middle_name, last_name, username, password, year_of_birth, s_email):

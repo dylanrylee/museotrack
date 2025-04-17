@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import styles from '../styles/Pages.module.css';
 import Header from '../components/Header';
 import Footer from '../components/Footer';
@@ -9,11 +10,12 @@ const VisitorHomepage = () => {
   const [username, setUsername] = useState('');
   const [museums, setMuseums] = useState([]);
   const [error, setError] = useState('');
+  const navigate = useNavigate();
 
-  const email = localStorage.getItem('email'); // 🔑 get email
+  const email = localStorage.getItem('email');
 
   useEffect(() => {
-    console.log("📧 Email from localStorage:", email); // Debug line
+    console.log("📧 Email from localStorage:", email);
 
     if (!email) {
       setError('Email not provided.');
@@ -37,6 +39,11 @@ const VisitorHomepage = () => {
     fetchVisitorInfo();
   }, [email]);
 
+  const handleLogout = () => {
+    localStorage.clear();
+    navigate('/');
+  };
+
   return (
     <>
       <Header />
@@ -50,6 +57,9 @@ const VisitorHomepage = () => {
             <div>
               <p>Welcome, <strong>{username}</strong></p>
               <p>Email: <strong>{email}</strong></p>
+              <button onClick={handleLogout} className={styles.signOutButton}>
+                Logout
+              </button>
             </div>
 
             <h2>Visited Museums:</h2>

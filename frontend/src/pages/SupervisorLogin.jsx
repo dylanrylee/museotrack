@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom'; 
+import { Link, useNavigate } from 'react-router-dom';
 import styles from '../styles/LoginPage.module.css';
-import api from '../api/client'; // your Axios instance
+import api from '../api/client';
 
-const LoginPage = () => {
+const SupervisorLogin = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
@@ -11,28 +11,34 @@ const LoginPage = () => {
 
   const handleLogin = async (e) => {
     e.preventDefault();
-  
+
     try {
-      await api.post('/login-visitor/', { email, password }); // use your custom endpoint
+      const res = await api.post('/login-supervisor-employee/', { email, password });
+      const { role } = res.data;
+
       localStorage.setItem('email', email);
       localStorage.setItem('isLoggedIn', 'true');
-  
-      setError('');
-      navigate('/visitor-homepage');
+
+      // ✅ Ensure localStorage writes before navigation
+      setTimeout(() => {
+        if (role === 'supervisor') {
+          navigate('/supervisor-homepage');
+        } else if (role === 'employee') {
+          navigate('/employee-homepage');
+        } else {
+          setError('Unrecognized role');
+        }
+      }, 200);
     } catch (err) {
-      const msg = err.response?.data?.message || 'Invalid email or password';
+      const msg = err.response?.data?.message || 'Login failed';
       setError(msg);
     }
   };
-  
-
-  localStorage.getItem('email')
-  
 
   return (
     <div className={styles.loginPageWrapper}>
       <div className={styles.loginBox}>
-        <h1 className={styles.title}>MuseoTrack</h1>
+        <h1 className={styles.title}>MuseoTrack - Staff Login</h1>
 
         {error && <p className={styles.errorMessage}>{error}</p>}
 
@@ -41,7 +47,7 @@ const LoginPage = () => {
           <input
             type="email"
             id="email"
-            placeholder="Enter your email"
+            placeholder="Enter your staff email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             required
@@ -60,16 +66,15 @@ const LoginPage = () => {
           <button type="submit" className={styles.signInButton}>Sign In</button>
         </form>
 
-        <p className={styles.employeePrompt}>
-          Are you a museum employee? <Link to="/supervisor-login">Click here to sign in</Link>
-        </p>
-
         <p className={styles.registerPrompt}>
-          Don’t have an account? <Link to="/register-visitor">Click here to register</Link>
+          Not a museum employee? <Link to="/">Login as Visitor</Link>
+        </p>
+        <p className={styles.registerPrompt}>
+          Don’t have a supervisor account? <Link to="/supervisor-register">Register here</Link>
         </p>
       </div>
     </div>
   );
 };
 
-export default LoginPage;
+export default SupervisorLogin;

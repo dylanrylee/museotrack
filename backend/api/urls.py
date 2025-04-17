@@ -8,6 +8,10 @@ urlpatterns = [
     path('login-visitor/', login_visitor),
     path('register-visitor/', register_visitor),
     path('browse-visited-museums/', browse_visited_museums),
+    path('login-supervisor-employee/', login_supervisor_employee),
+    path('register-supervisor/', register_supervisor),
+    path('get-supervisor-employees/', get_supervisor_employees),
+    path('get-supervisor-info/', get_supervisor_info),
     
     # JWT auth endpoints
     path('token/', CustomTokenObtainPairView.as_view(), name='token_obtain_pair'),
