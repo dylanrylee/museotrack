@@ -12,24 +12,20 @@ https://docs.djangoproject.com/en/5.1/ref/settings/
 
 from pathlib import Path
 import os
-from django.db import connection
+from dotenv import load_dotenv
+
+# Load environment variables from .env file
+load_dotenv()
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-# Quick-start development settings - unsuitable for production
-# See https://docs.djangoproject.com/en/5.1/howto/deployment/checklist/
-
-# SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-x#0at)l==3ij)b)012(ze-bz+rta^q)7h6i&t2s$8p&6-pcb#&'
-
-# SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
-
+# Security settings
+SECRET_KEY = os.environ.get('SECRET_KEY')
+DEBUG = os.environ.get('DEBUG', 'False') == 'True'
 ALLOWED_HOSTS = []
 
-# Application definition
-
+# Installed apps
 INSTALLED_APPS = [
     'django.contrib.admin',
     'django.contrib.auth',
@@ -38,8 +34,16 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'rest_framework',
+    'api',
     'corsheaders',
 ]
+
+REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': (
+        'rest_framework_simplejwt.authentication.JWTAuthentication',
+    )
+}
+
 
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:3000",  # Change this if React is hosted elsewhere
@@ -77,16 +81,14 @@ TEMPLATES = [
 WSGI_APPLICATION = 'backend.wsgi.application'
 
 # Database
-# https://docs.djangoproject.com/en/5.1/ref/settings/#databases
-
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
-        'NAME': 'museotrackdb',
-        'USER': 'root',
-        'PASSWORD': 'Kenken@2004',
-        'HOST': 'localhost',
-        'PORT': '3306',
+        'NAME': os.environ.get('DB_NAME'),
+        'USER': os.environ.get('DB_USER'),
+        'PASSWORD': os.environ.get('DB_PASSWORD'),
+        'HOST': os.environ.get('DB_HOST', 'localhost'),
+        'PORT': os.environ.get('DB_PORT', '3306'),
     }
 }
 
@@ -128,20 +130,3 @@ STATIC_URL = 'static/'
 # https://docs.djangoproject.com/en/5.1/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
-
-# Load museum_schema.sql at startup
-SQL_FILE_PATH = os.path.join(BASE_DIR, 'backend', 'sql', 'museum_schema.sql')
-
-if os.path.exists(SQL_FILE_PATH):
-    try:
-        with open(SQL_FILE_PATH, 'r', encoding='utf-8') as file:
-            sql_statements = file.read()
-
-        with connection.cursor() as cursor:
-            for statement in sql_statements.split(';'):
-                statement = statement.strip()
-                if statement:
-                    cursor.execute(statement)
-        print("✅ museum_schema.sql has been executed successfully.")
-    except Exception as e:
-        print(f"⚠️ Error executing museum_schema.sql: {e}")

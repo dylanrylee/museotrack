@@ -1,0 +1,72 @@
+.wrapper {
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;      /* Start at top instead of center */
+    min-height: 100vh;            /* Allows growing beyond 100vh */
+    padding: 2rem 1rem;           /* Adds breathing room */
+    background: #f4f4f4;
+    overflow-y: auto;             /* Enables vertical scroll if needed */
+}
+  
+  
+.box {
+    background: #ffffffee;
+    padding: 2rem 3rem;
+    border-radius: 12px;
+    box-shadow: 0 0 15px rgba(0, 0, 0, 0.1);
+    width: 100%;
+    max-width: 500px;
+    text-align: center;
+}
+  
+.title {
+    font-family: 'Merriweather', serif;
+    font-size: 2rem;
+    margin-bottom: 1.5rem;
+    font-weight: bold;
+}
+  
+.form {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    text-align: left;
+}
+  
+.form label {
+    font-weight: 600;
+}
+  
+.form input {
+    padding: 0.6rem;
+    font-size: 1rem;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+}
+  
+.registerButton {
+    padding: 0.7rem;
+    background-color: #222;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: background 0.3s;
+}
+  
+.registerButton:hover {
+    background-color: #444;
+}
+  
+.message {
+    margin-bottom: 1rem;
+    color: green;
+    font-weight: 600;
+}
+  
+.loginPrompt {
+    font-size: 0.9rem;
+    margin-top: 1rem;
+}
+  
