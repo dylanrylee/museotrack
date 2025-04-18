@@ -341,3 +341,15 @@ h3 {
   margin-bottom: 1rem;
   color: white;
 }
+
+.searchInput {
+	padding: 0.5rem 1rem;
+	font-size: 1rem;
+	border-radius: 8px;
+	border: 1px solid #ccc;
+	margin: 1rem 0;
+	width: 100%;
+	max-width: 300px;
+	display: block;
+  }
+  

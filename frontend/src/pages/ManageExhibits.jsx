@@ -11,6 +11,7 @@ const ManageExhibits = () => {
   const [showEditModal, setShowEditModal] = useState(false);
   const [formData, setFormData] = useState({ exid: "", name: "" });
   const [editData, setEditData] = useState({ exid: "", newName: "" });
+  const [searchTerm, setSearchTerm] = useState("");
 
   const supervisorEmail = localStorage.getItem("email");
   const supervisorMuseumAddress = localStorage.getItem("museumAddress");
@@ -45,7 +46,7 @@ const ManageExhibits = () => {
     try {
       await api.post("/add-exhibit/", {
         ...formData,
-        address: supervisorMuseumAddress, 
+        address: supervisorMuseumAddress,
       });
       setFormData({ exid: "", name: "" });
       setShowModal(false);
@@ -55,15 +56,10 @@ const ManageExhibits = () => {
       alert("Failed to add exhibit: " + msg);
     }
   };
-  
+
   const handleOpenEdit = (exhibit) => {
     setEditData({ exid: exhibit.exid, newName: exhibit.name });
     setShowEditModal(true);
-  };
-
-  const handleOpenAddModal = () => {
-    setFormData({ exid: "", name: "" }); // Always reset form before showing modal
-    setShowModal(true);
   };
 
   const handleUpdateExhibit = async (e) => {
@@ -71,7 +67,7 @@ const ManageExhibits = () => {
     try {
       await api.post("/update-exhibit/", {
         exid: editData.exid,
-        name: editData.newName, 
+        name: editData.newName,
       });
       setShowEditModal(false);
       fetchExhibits();
@@ -79,7 +75,6 @@ const ManageExhibits = () => {
       alert(err.response?.data?.message || "Failed to update exhibit");
     }
   };
-  
 
   const handleDeleteExhibit = async () => {
     try {
@@ -91,17 +86,36 @@ const ManageExhibits = () => {
     }
   };
 
+  const filteredExhibits = exhibits.filter((ex) =>
+    `${ex.exid} ${ex.name}`.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
   return (
     <>
       <Header />
       <SupervisorMenu />
       <div className={styles.main}>
         <h2>Manage Exhibits</h2>
-        <button onClick={handleOpenAddModal} className={styles.addEmployeeButton}>
-        + Add Exhibit
+
+        <input
+          type="text"
+          placeholder="Search exhibits..."
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          className={styles.searchInput}
+        />
+
+        <button
+          onClick={() => {
+            setFormData({ exid: "", name: "" });
+            setShowModal(true);
+          }}
+          className={styles.addEmployeeButton}
+        >
+          + Add Exhibit
         </button>
 
-        {exhibits.length > 0 ? (
+        {filteredExhibits.length > 0 ? (
           <table className={styles.table}>
             <thead>
               <tr>
@@ -111,7 +125,7 @@ const ManageExhibits = () => {
               </tr>
             </thead>
             <tbody>
-              {exhibits.map((ex) => (
+              {filteredExhibits.map((ex) => (
                 <tr key={ex.exid}>
                   <td>{ex.exid}</td>
                   <td>{ex.name}</td>
@@ -139,15 +153,30 @@ const ManageExhibits = () => {
             <h2>Add Exhibit</h2>
             <form onSubmit={handleAddExhibit}>
               <label>Exhibit ID:</label>
-              <input name="exid" value={formData.exid} onChange={handleChange} required />
+              <input
+                name="exid"
+                value={formData.exid}
+                onChange={handleChange}
+                required
+              />
 
               <label>Name:</label>
-              <input name="name" value={formData.name} onChange={handleChange} required />
+              <input
+                name="name"
+                value={formData.name}
+                onChange={handleChange}
+                required
+              />
 
-              <button type="submit" className={styles.registerButton}>Submit</button>
+              <button type="submit" className={styles.registerButton}>
+                Submit
+              </button>
               <button
                 type="button"
-                onClick={() => setShowModal(false)}
+                onClick={() => {
+                  setShowModal(false);
+                  setFormData({ exid: "", name: "" });
+                }}
                 className={styles.cancelButton}
               >
                 Cancel
@@ -170,10 +199,15 @@ const ManageExhibits = () => {
                 value={editData.newName}
                 onChange={handleEditChange}
               />
-              <button type="submit" className={styles.registerButton}>Submit Changes</button>
+              <button type="submit" className={styles.registerButton}>
+                Submit Changes
+              </button>
               <button
                 type="button"
-                onClick={() => setShowEditModal(false)}
+                onClick={() => {
+                  setShowEditModal(false);
+                  setEditData({ exid: "", newName: "" });
+                }}
                 className={styles.cancelButton}
               >
                 Cancel

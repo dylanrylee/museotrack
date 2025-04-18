@@ -15,6 +15,8 @@ import SupervisorRegister from './pages/SupervisorRegister';
 import SupervisorHomepage from './pages/SupervisorHomepage';
 import ManageArtifacts from './pages/ManageArtifacts';
 import ManageExhibits from './pages/ManageExhibits';
+import ManageEvents from './pages/ManageEvents';
+
 
 function App() {
   return (
@@ -34,6 +36,7 @@ function App() {
         <Route path="/supervisor-homepage" element={<SupervisorHomepage />} />
         <Route path="/manage-artifacts" element={<ManageArtifacts />} />
         <Route path="/manage-exhibits" element={<ManageExhibits />} />
+        <Route path="/manage-events" element={<ManageEvents />} />
       </Routes>
     </Router>
   );

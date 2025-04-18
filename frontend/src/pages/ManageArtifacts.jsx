@@ -10,6 +10,7 @@ const ManageArtifacts = () => {
   const [showAddModal, setShowAddModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [editArtifact, setEditArtifact] = useState(null);
+  const [searchTerm, setSearchTerm] = useState("");
 
   const supervisorEmail = localStorage.getItem("email");
 
@@ -47,7 +48,7 @@ const ManageArtifacts = () => {
         ...formData,
         semail: supervisorEmail,
       });
-  
+
       setFormData({
         artid: "",
         name: "",
@@ -60,7 +61,7 @@ const ManageArtifacts = () => {
       fetchArtifacts();
     } catch (err) {
       const message = err.response?.data?.message || "";
-  
+
       if (
         message.includes("foreign key constraint fails") &&
         message.toLowerCase().includes("exhibit")
@@ -72,8 +73,6 @@ const ManageArtifacts = () => {
       }
     }
   };
-  
-  
 
   const handleOpenEdit = (artifact) => {
     setEditArtifact(artifact);
@@ -95,6 +94,14 @@ const ManageArtifacts = () => {
         ...formData,
       });
       setShowEditModal(false);
+      setFormData({
+        artid: "",
+        name: "",
+        description: "",
+        year_made: "",
+        display_status: "",
+        exid: "",
+      });
       fetchArtifacts();
     } catch (err) {
       alert("Update failed");
@@ -107,6 +114,14 @@ const ManageArtifacts = () => {
         artid: editArtifact.artid,
       });
       setShowEditModal(false);
+      setFormData({
+        artid: "",
+        name: "",
+        description: "",
+        year_made: "",
+        display_status: "",
+        exid: "",
+      });
       fetchArtifacts();
     } catch (err) {
       alert("Delete failed");
@@ -121,18 +136,26 @@ const ManageArtifacts = () => {
       <div className={styles.main}>
         <h2>Manage Artifacts</h2>
 
+        <input
+          type="text"
+          placeholder="Search artifacts..."
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          className={styles.searchInput}
+        />
+
         <button
-            onClick={() => {
-              setShowAddModal(true);
-              setFormData({
-                artid: "",
-                name: "",
-                description: "",
-                year_made: "",
-                display_status: "",
-                exid: "",
-              });
-            }}
+          onClick={() => {
+            setShowAddModal(true);
+            setFormData({
+              artid: "",
+              name: "",
+              description: "",
+              year_made: "",
+              display_status: "",
+              exid: "",
+            });
+          }}
           className={styles.addEmployeeButton}
         >
           + Add Artifact
@@ -156,24 +179,31 @@ const ManageArtifacts = () => {
               </tr>
             </thead>
             <tbody>
-              {artifacts.map((artifact) => (
-                <tr key={artifact.artid}>
-                  <td>{artifact.name}</td>
-                  <td>{artifact.description}</td>
-                  <td>{artifact.year_made}</td>
-                  <td>{artifact.display_status}</td>
-                  <td>{artifact.exid}</td>
-                  <td>{artifact.semail}</td>
-                  <td>
-                    <button
-                      className={styles.editButton}
-                      onClick={() => handleOpenEdit(artifact)}
-                    >
-                      ✏️ Edit
-                    </button>
-                  </td>
-                </tr>
-              ))}
+              {artifacts
+                .filter((artifact) =>
+                  Object.values(artifact)
+                    .join(" ")
+                    .toLowerCase()
+                    .includes(searchTerm.toLowerCase())
+                )
+                .map((artifact) => (
+                  <tr key={artifact.artid}>
+                    <td>{artifact.name}</td>
+                    <td>{artifact.description}</td>
+                    <td>{artifact.year_made}</td>
+                    <td>{artifact.display_status}</td>
+                    <td>{artifact.exid}</td>
+                    <td>{artifact.semail}</td>
+                    <td>
+                      <button
+                        className={styles.editButton}
+                        onClick={() => handleOpenEdit(artifact)}
+                      >
+                        ✏️ Edit
+                      </button>
+                    </td>
+                  </tr>
+                ))}
             </tbody>
           </table>
         )}
@@ -185,13 +215,13 @@ const ManageArtifacts = () => {
           <div className={styles.modalBox}>
             <h2>Add Artifact</h2>
             <form onSubmit={handleAddArtifact}>
-            <label>Artifact ID:</label>
-<input
-  name="artid"
-  value={formData.artid}
-  onChange={handleChange}
-  required
-/>
+              <label>Artifact ID:</label>
+              <input
+                name="artid"
+                value={formData.artid}
+                onChange={handleChange}
+                required
+              />
               <label>Name:</label>
               <input
                 name="name"
@@ -233,7 +263,17 @@ const ManageArtifacts = () => {
               <button
                 type="button"
                 className={styles.cancelButton}
-                onClick={() => setShowAddModal(false)}
+                onClick={() => {
+                  setShowAddModal(false);
+                  setFormData({
+                    artid: "",
+                    name: "",
+                    description: "",
+                    year_made: "",
+                    display_status: "",
+                    exid: "",
+                  });
+                }}
               >
                 Cancel
               </button>
@@ -285,7 +325,17 @@ const ManageArtifacts = () => {
               <button
                 type="button"
                 className={styles.cancelButton}
-                onClick={() => setShowEditModal(false)}
+                onClick={() => {
+                  setShowEditModal(false);
+                  setFormData({
+                    artid: "",
+                    name: "",
+                    description: "",
+                    year_made: "",
+                    display_status: "",
+                    exid: "",
+                  });
+                }}
               >
                 Cancel
               </button>
