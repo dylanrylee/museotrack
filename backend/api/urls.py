@@ -25,8 +25,13 @@ urlpatterns = [
     path("add-event/", add_event),
     path("update-event/", update_event),
     path("delete-event/", delete_event),
+    path("get-artists/", get_artists),
+    path("add-artist/", add_artist),
+    path("update-artist/", update_artist),
+    path("delete-artist/", delete_artist),
+    path("get-artifacts-for-artist/", get_artifacts_for_artist),
 
-    
+
     # JWT auth endpoints
     path('token/', CustomTokenObtainPairView.as_view(), name='token_obtain_pair'),
     path('token/refresh/', CustomTokenObtainPairView.as_view(), name='token_refresh'),

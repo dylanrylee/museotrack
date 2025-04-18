@@ -16,6 +16,7 @@ import SupervisorHomepage from './pages/SupervisorHomepage';
 import ManageArtifacts from './pages/ManageArtifacts';
 import ManageExhibits from './pages/ManageExhibits';
 import ManageEvents from './pages/ManageEvents';
+import ManageArtists from './pages/ManageArtists';
 
 
 function App() {
@@ -35,6 +36,7 @@ function App() {
         <Route path="/supervisor-register" element={<SupervisorRegister />} />
         <Route path="/supervisor-homepage" element={<SupervisorHomepage />} />
         <Route path="/manage-artifacts" element={<ManageArtifacts />} />
+        <Route path="/manage-artists" element={<ManageArtists />} />
         <Route path="/manage-exhibits" element={<ManageExhibits />} />
         <Route path="/manage-events" element={<ManageEvents />} />
       </Routes>

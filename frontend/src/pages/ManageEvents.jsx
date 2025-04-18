@@ -7,6 +7,7 @@ import api from "../api/client";
 
 const ManageEvents = () => {
   const [events, setEvents] = useState([]);
+  const [exhibitOptions, setExhibitOptions] = useState([]);
   const [showModal, setShowModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
@@ -27,8 +28,20 @@ const ManageEvents = () => {
     }
   };
 
+  const fetchExhibits = async () => {
+    try {
+      const res = await api.get("/get-exhibits/", {
+        params: { address: supervisorMuseumAddress },
+      });
+      setExhibitOptions(res.data.exhibits);
+    } catch (err) {
+      console.error("Failed to fetch exhibits:", err);
+    }
+  };
+
   useEffect(() => {
     fetchEvents();
+    fetchExhibits();
   }, []);
 
   const handleChange = (e) => {
@@ -44,11 +57,17 @@ const ManageEvents = () => {
   const handleAddEvent = async (e) => {
     e.preventDefault();
     try {
+      const { name, start_date, end_date, exid } = formData;
+  
       await api.post("/add-event/", {
-        ...formData,
+        name,
+        start_date,
+        end_date,
+        exid,
         address: supervisorMuseumAddress,
       });
-      setFormData({ evid: "", name: "", start_date: "", end_date: "", exid: "" });
+  
+      setFormData({ name: "", start_date: "", end_date: "", exid: "" });
       setShowModal(false);
       fetchEvents();
     } catch (err) {
@@ -56,6 +75,7 @@ const ManageEvents = () => {
       alert("Failed to add event: " + msg);
     }
   };
+  
 
   const handleOpenEdit = (event) => {
     setEditData({ ...event });
@@ -156,16 +176,27 @@ const ManageEvents = () => {
           <div className={styles.modalBox}>
             <h2>Add Event</h2>
             <form onSubmit={handleAddEvent}>
-              <label>Event ID:</label>
-              <input name="evid" value={formData.evid} onChange={handleChange} required />
               <label>Name:</label>
               <input name="name" value={formData.name} onChange={handleChange} required />
               <label>Start Date:</label>
               <input type="date" name="start_date" value={formData.start_date} onChange={handleChange} required min={today} />
               <label>End Date:</label>
               <input type="date" name="end_date" value={formData.end_date} onChange={handleChange} required min={today} />
-              <label>Exhibit ID:</label>
-              <input name="exid" value={formData.exid} onChange={handleChange} required />
+              <label>Exhibit:</label>
+              <select
+                name="exid"
+                value={formData.exid}
+                onChange={handleChange}
+                required
+                className={styles.selectDropdown}
+              >
+                <option value="">Select Exhibit</option>
+                {exhibitOptions.map((ex) => (
+                  <option key={ex.exid} value={ex.exid}>
+                    {ex.name} (ID: {ex.exid})
+                  </option>
+                ))}
+              </select>
               <button type="submit" className={styles.registerButton}>Submit</button>
               <button type="button" onClick={() => setShowModal(false)} className={styles.cancelButton}>Cancel</button>
             </form>
@@ -184,8 +215,16 @@ const ManageEvents = () => {
               <input type="date" name="start_date" value={editData.start_date} onChange={handleEditChange} min={today} />
               <label>End Date:</label>
               <input type="date" name="end_date" value={editData.end_date} onChange={handleEditChange} min={today} />
-              <label>Exhibit ID:</label>
-              <input name="exid" value={editData.exid} onChange={handleEditChange} />
+              <label>Choose Exhibit:</label>
+              <select name="exid" value={editData.exid} onChange={handleEditChange}                 className={styles.selectDropdown}
+              >
+                <option value="">-- Select an Exhibit --</option>
+                {exhibitOptions.map((ex) => (
+                  <option key={ex.exid} value={ex.exid}>
+                    {ex.name} (ID: {ex.exid})
+                  </option>
+                ))}
+              </select>
               <button type="submit" className={styles.registerButton}>Submit Changes</button>
               <button type="button" onClick={() => setShowEditModal(false)} className={styles.cancelButton}>Cancel</button>
               <button type="button" onClick={handleDeleteEvent} className={styles.deleteButton}>Delete Event</button>

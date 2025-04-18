@@ -9,11 +9,10 @@ const ManageExhibits = () => {
   const [exhibits, setExhibits] = useState([]);
   const [showModal, setShowModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
-  const [formData, setFormData] = useState({ exid: "", name: "" });
+  const [formData, setFormData] = useState({ name: "" });
   const [editData, setEditData] = useState({ exid: "", newName: "" });
   const [searchTerm, setSearchTerm] = useState("");
 
-  const supervisorEmail = localStorage.getItem("email");
   const supervisorMuseumAddress = localStorage.getItem("museumAddress");
 
   const fetchExhibits = async () => {
@@ -48,7 +47,7 @@ const ManageExhibits = () => {
         ...formData,
         address: supervisorMuseumAddress,
       });
-      setFormData({ exid: "", name: "" });
+      setFormData({ name: "" });
       setShowModal(false);
       fetchExhibits();
     } catch (err) {
@@ -107,7 +106,7 @@ const ManageExhibits = () => {
 
         <button
           onClick={() => {
-            setFormData({ exid: "", name: "" });
+            setFormData({ name: "" });
             setShowModal(true);
           }}
           className={styles.addEmployeeButton}
@@ -152,14 +151,6 @@ const ManageExhibits = () => {
           <div className={styles.modalBox}>
             <h2>Add Exhibit</h2>
             <form onSubmit={handleAddExhibit}>
-              <label>Exhibit ID:</label>
-              <input
-                name="exid"
-                value={formData.exid}
-                onChange={handleChange}
-                required
-              />
-
               <label>Name:</label>
               <input
                 name="name"
@@ -175,7 +166,7 @@ const ManageExhibits = () => {
                 type="button"
                 onClick={() => {
                   setShowModal(false);
-                  setFormData({ exid: "", name: "" });
+                  setFormData({ name: "" });
                 }}
                 className={styles.cancelButton}
               >

@@ -1,21 +1,18 @@
 import React, { useEffect, useState } from "react";
 import Header from "../components/Header";
 import Footer from "../components/Footer";
+import SupervisorMenu from "../components/SupervisorMenu";
 import styles from "../styles/SupervisorHomepage.module.css";
 import api from "../api/client";
-import SupervisorMenu from "../components/SupervisorMenu";
 
 const ManageArtifacts = () => {
   const [artifacts, setArtifacts] = useState([]);
+  const [exhibits, setExhibits] = useState([]);
   const [showAddModal, setShowAddModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [editArtifact, setEditArtifact] = useState(null);
   const [searchTerm, setSearchTerm] = useState("");
-
-  const supervisorEmail = localStorage.getItem("email");
-
   const [formData, setFormData] = useState({
-    artid: "",
     name: "",
     description: "",
     year_made: "",
@@ -23,17 +20,35 @@ const ManageArtifacts = () => {
     exid: "",
   });
 
+  const supervisorEmail = localStorage.getItem("email");
+  const museumAddress = localStorage.getItem("museumAddress");
+
   const fetchArtifacts = async () => {
+    if (!supervisorEmail) return;
     try {
-      const res = await api.get("/get-artifacts/");
+      const res = await api.get("/get-artifacts/", {
+        params: { semail: supervisorEmail },
+      });
       setArtifacts(res.data.artifacts);
     } catch (err) {
       console.error("Error fetching artifacts:", err);
     }
   };
 
+  const fetchExhibits = async () => {
+    try {
+      const res = await api.get("/get-exhibits/", {
+        params: { address: museumAddress },
+      });
+      setExhibits(res.data.exhibits);
+    } catch (err) {
+      console.error("Failed to fetch exhibits:", err);
+    }
+  };
+
   useEffect(() => {
     fetchArtifacts();
+    fetchExhibits();
   }, []);
 
   const handleChange = (e) => {
@@ -48,9 +63,7 @@ const ManageArtifacts = () => {
         ...formData,
         semail: supervisorEmail,
       });
-
       setFormData({
-        artid: "",
         name: "",
         description: "",
         year_made: "",
@@ -61,15 +74,13 @@ const ManageArtifacts = () => {
       fetchArtifacts();
     } catch (err) {
       const message = err.response?.data?.message || "";
-
       if (
         message.includes("foreign key constraint fails") &&
         message.toLowerCase().includes("exhibit")
       ) {
-        alert("Ohp, that Exhibit doesn't exist in your Museum yet.");
+        alert("That Exhibit doesn't exist in your Museum yet.");
       } else {
-        console.error("❌ Artifact add error:", message);
-        alert("Failed to add artifact: " + message || "Unknown error");
+        alert("Failed to add artifact: " + message);
       }
     }
   };
@@ -94,14 +105,6 @@ const ManageArtifacts = () => {
         ...formData,
       });
       setShowEditModal(false);
-      setFormData({
-        artid: "",
-        name: "",
-        description: "",
-        year_made: "",
-        display_status: "",
-        exid: "",
-      });
       fetchArtifacts();
     } catch (err) {
       alert("Update failed");
@@ -114,14 +117,6 @@ const ManageArtifacts = () => {
         artid: editArtifact.artid,
       });
       setShowEditModal(false);
-      setFormData({
-        artid: "",
-        name: "",
-        description: "",
-        year_made: "",
-        display_status: "",
-        exid: "",
-      });
       fetchArtifacts();
     } catch (err) {
       alert("Delete failed");
@@ -132,10 +127,8 @@ const ManageArtifacts = () => {
     <>
       <Header />
       <SupervisorMenu />
-
       <div className={styles.main}>
         <h2>Manage Artifacts</h2>
-
         <input
           type="text"
           placeholder="Search artifacts..."
@@ -143,12 +136,10 @@ const ManageArtifacts = () => {
           onChange={(e) => setSearchTerm(e.target.value)}
           className={styles.searchInput}
         />
-
         <button
           onClick={() => {
             setShowAddModal(true);
             setFormData({
-              artid: "",
               name: "",
               description: "",
               year_made: "",
@@ -175,6 +166,8 @@ const ManageArtifacts = () => {
                 <th>Display Status</th>
                 <th>Exhibit ID</th>
                 <th>Supervisor Email</th>
+                <th>Creators</th>
+                <th>Ratings</th>
                 <th>Actions</th>
               </tr>
             </thead>
@@ -194,6 +187,18 @@ const ManageArtifacts = () => {
                     <td>{artifact.display_status}</td>
                     <td>{artifact.exid}</td>
                     <td>{artifact.semail}</td>
+                    <td>
+  {artifact.artists && artifact.artists.length > 0
+    ? artifact.artists
+        .map((a) =>
+          [a.first_name, a.middle_name, a.last_name]
+            .filter(Boolean)
+            .join(" ")
+        )
+        .join(", ")
+    : "None"}
+</td>
+                    <td>{artifact.ratings?.join(", ") || "N/A"}</td>
                     <td>
                       <button
                         className={styles.editButton}
@@ -215,68 +220,26 @@ const ManageArtifacts = () => {
           <div className={styles.modalBox}>
             <h2>Add Artifact</h2>
             <form onSubmit={handleAddArtifact}>
-              <label>Artifact ID:</label>
-              <input
-                name="artid"
-                value={formData.artid}
-                onChange={handleChange}
-                required
-              />
               <label>Name:</label>
-              <input
-                name="name"
-                value={formData.name}
-                onChange={handleChange}
-                required
-              />
+              <input name="name" value={formData.name} onChange={handleChange} required />
               <label>Description:</label>
-              <input
-                name="description"
-                value={formData.description}
-                onChange={handleChange}
-                required
-              />
+              <input name="description" value={formData.description} onChange={handleChange} required />
               <label>Year Made:</label>
-              <input
-                name="year_made"
-                value={formData.year_made}
-                onChange={handleChange}
-                required
-              />
+              <input name="year_made" value={formData.year_made} onChange={handleChange} required />
               <label>Display Status:</label>
-              <input
-                name="display_status"
-                value={formData.display_status}
-                onChange={handleChange}
-                required
-              />
-              <label>Exhibit ID:</label>
-              <input
-                name="exid"
-                value={formData.exid}
-                onChange={handleChange}
-                required
-              />
-              <button type="submit" className={styles.registerButton}>
-                Submit
-              </button>
-              <button
-                type="button"
-                className={styles.cancelButton}
-                onClick={() => {
-                  setShowAddModal(false);
-                  setFormData({
-                    artid: "",
-                    name: "",
-                    description: "",
-                    year_made: "",
-                    display_status: "",
-                    exid: "",
-                  });
-                }}
+              <input name="display_status" value={formData.display_status} onChange={handleChange} required />
+              <label>Exhibit:</label>
+              <select name="exid" value={formData.exid} onChange={handleChange} required                  className={styles.selectDropdown}
               >
-                Cancel
-              </button>
+                <option value="">-- Select Exhibit --</option>
+                {exhibits.map((ex) => (
+                  <option key={ex.exid} value={ex.exid}>
+                    {ex.exid} - {ex.name}
+                  </option>
+                ))}
+              </select>
+              <button type="submit" className={styles.registerButton}>Submit</button>
+              <button type="button" onClick={() => setShowAddModal(false)} className={styles.cancelButton}>Cancel</button>
             </form>
           </div>
         </div>
@@ -286,66 +249,29 @@ const ManageArtifacts = () => {
       {showEditModal && (
         <div className={styles.modalBackdrop}>
           <div className={styles.modalBox}>
-            <h2 className={styles.editTitle}>Edit Artifact</h2>
+            <h2>Edit Artifact</h2>
             <form onSubmit={handleUpdateArtifact}>
               <label>Name:</label>
-              <input
-                name="name"
-                value={formData.name}
-                onChange={handleChange}
-              />
+              <input name="name" value={formData.name} onChange={handleChange} />
               <label>Description:</label>
-              <input
-                name="description"
-                value={formData.description}
-                onChange={handleChange}
-              />
+              <input name="description" value={formData.description} onChange={handleChange} />
               <label>Year Made:</label>
-              <input
-                name="year_made"
-                value={formData.year_made}
-                onChange={handleChange}
-              />
+              <input name="year_made" value={formData.year_made} onChange={handleChange} />
               <label>Display Status:</label>
-              <input
-                name="display_status"
-                value={formData.display_status}
-                onChange={handleChange}
-              />
-              <label>Exhibit ID:</label>
-              <input
-                name="exid"
-                value={formData.exid}
-                onChange={handleChange}
-              />
-
-              <button type="submit" className={styles.registerButton}>
-                Submit Changes
-              </button>
-              <button
-                type="button"
-                className={styles.cancelButton}
-                onClick={() => {
-                  setShowEditModal(false);
-                  setFormData({
-                    artid: "",
-                    name: "",
-                    description: "",
-                    year_made: "",
-                    display_status: "",
-                    exid: "",
-                  });
-                }}
+              <input name="display_status" value={formData.display_status} onChange={handleChange} />
+              <label>Exhibit:</label>
+              <select name="exid" value={formData.exid} onChange={handleChange}                 className={styles.selectDropdown}
               >
-                Cancel
-              </button>
-              <button
-                type="button"
-                className={styles.deleteButton}
-                onClick={handleDeleteArtifact}
-              >
-                Delete Artifact
-              </button>
+                <option value="">-- Select Exhibit --</option>
+                {exhibits.map((ex) => (
+                  <option key={ex.exid} value={ex.exid}>
+                    {ex.exid} - {ex.name}
+                  </option>
+                ))}
+              </select>
+              <button type="submit" className={styles.registerButton}>Submit Changes</button>
+              <button type="button" onClick={() => setShowEditModal(false)} className={styles.cancelButton}>Cancel</button>
+              <button type="button" onClick={handleDeleteArtifact} className={styles.deleteButton}>Delete Artifact</button>
             </form>
           </div>
         </div>
