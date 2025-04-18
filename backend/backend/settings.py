@@ -44,12 +44,8 @@ REST_FRAMEWORK = {
     )
 }
 
-
-CORS_ALLOWED_ORIGINS = [
-    "http://localhost:3000",  # Change this if React is hosted elsewhere
-]
-
 MIDDLEWARE = [
+    'corsheaders.middleware.CorsMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -59,6 +55,13 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'corsheaders.middleware.CorsMiddleware',
 ]
+
+CSRF_TRUSTED_ORIGINS = ["http://localhost:3000"]
+CORS_ALLOWED_ORIGINS = ["http://localhost:3000"]
+CORS_ALLOW_CREDENTIALS = True # https://github.com/adamchainz/django-cors-headers#cors_allow_credentials
+
+# https://docs.djangoproject.com/en/dev/ref/settings/#csrf-cookie-httponly
+CSRF_COOKIE_HTTPONLY = False
 
 ROOT_URLCONF = 'backend.urls'
 

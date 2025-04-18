@@ -55,6 +55,8 @@ const SupervisorHomepage = () => {
         setUsername(infoRes.data.username);
         setMuseum(infoRes.data.museum);
         setMuseumAddress(infoRes.data.museumAddress);
+
+        localStorage.setItem("museumAddress", infoRes.data.museumAddress);
       } catch (err) {
         console.error("Error loading supervisor data:", err);
         setError(
@@ -175,11 +177,11 @@ const SupervisorHomepage = () => {
               onClick={() => setShowModal(true)}
               className={styles.addEmployeeButton}
             >
-              ➕ Add Employee
+              + Add Employee
             </button>
 
             {employees.length > 0 ? (
-              <table className={styles.employeeTable}>
+              <table className={styles.table}>
                 <thead>
                   <tr>
                     <th>Email</th>

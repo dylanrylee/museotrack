@@ -1,10 +1,8 @@
 from django.contrib import admin
 from django.urls import path
 from .views import *
-from .views import CustomTokenObtainPairView
 
 urlpatterns = [
-    path('admin/', admin.site.urls),
     path('login-visitor/', login_visitor),
     path('register-visitor/', register_visitor),
     path('browse-visited-museums/', browse_visited_museums),
@@ -15,6 +13,14 @@ urlpatterns = [
     path('register-employee/', register_employee),
     path('update-employee/', update_employee),
     path('delete-employee/', delete_employee),
+    path("get-artifacts/", get_artifacts),
+    path("add-artifact/", add_artifact),
+    path("update-artifact/", update_artifact),
+    path("delete-artifact/", delete_artifact),
+    path("add-exhibit/", add_exhibit),
+    path("update-exhibit/", update_exhibit),
+    path("delete-exhibit/", delete_exhibit),
+    path("get-exhibits/", get_exhibits),
     
     # JWT auth endpoints
     path('token/', CustomTokenObtainPairView.as_view(), name='token_obtain_pair'),

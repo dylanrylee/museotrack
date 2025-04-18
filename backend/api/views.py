@@ -112,6 +112,42 @@ def login_supervisor_employee(request):
     except Exception as e:
         return Response({"message": f"Server error: {str(e)}"}, status=500)
 
+# Browse visited museums
+@api_view(['GET'])
+def browse_visited_museums(request):
+    v_email = request.query_params.get('email')
+
+    if not v_email:
+        return Response({"message": "Missing email"}, status=400)
+
+    try:
+        with connection.cursor() as cursor:
+            # Get username
+            cursor.execute("SELECT Username FROM USER WHERE Email = %s", [v_email])
+            user = cursor.fetchone()
+
+            if not user:
+                return Response({"message": "User not found"}, status=404)
+
+            username = user[0]
+
+            # Get visited museums
+            cursor.execute("""
+                SELECT M.Name, M.Address
+                FROM VISITS AS V
+                JOIN MUSEUM AS M ON V.Address = M.Address
+                WHERE V.VEmail = %s
+            """, [v_email])
+            museums = cursor.fetchall()
+            museum_data = [{"name": row[0], "address": row[1]} for row in museums]
+
+        return Response({
+            "username": username,
+            "visitedMuseums": museum_data
+        })
+
+    except Exception as e:
+        return Response({"message": str(e)}, status=500)
 
 # Register account for supervisor
 @api_view(['POST'])
@@ -231,7 +267,7 @@ def register_employee(request):
             return Response({"message": f"Missing field: {field}"}, status=400)
 
     try:
-        hashed_password = make_password(data['password'])  # ✅ FIXED
+        hashed_password = make_password(data['password']) 
 
         with connection.cursor() as cursor:
             # Add to USER
@@ -271,9 +307,16 @@ def update_employee(request):
     try:
         with connection.cursor() as cursor:
             if new_username:
-                cursor.execute("UPDATE USER SET Username = %s WHERE Email = %s", [new_username, email])
+                cursor.execute(
+                    "UPDATE USER SET Username = %s WHERE Email = %s",
+                    [new_username, email]
+                )
             if new_password:
-                cursor.execute("UPDATE USER SET Password = %s WHERE Email = %s", [new_password, email])
+                hashed = make_password(new_password)
+                cursor.execute(
+                    "UPDATE USER SET Password = %s WHERE Email = %s",
+                    [hashed, email]
+                )
 
         return Response({"message": "Employee updated successfully."})
     except Exception as e:
@@ -292,6 +335,218 @@ def delete_employee(request):
         return Response({"message": "Employee deleted successfully."})
     except Exception as e:
         return Response({"message": f"Delete failed: {str(e)}"}, status=500)
+
+@api_view(["GET"])
+def get_artifacts(request):
+    try:
+        with connection.cursor() as cursor:
+            cursor.execute("SELECT * FROM ARTIFACT")
+            artifact_rows = cursor.fetchall()
+            columns = [col[0].lower() for col in cursor.description]
+
+        artifacts = []
+        for row in artifact_rows:
+            artifact = dict(zip(columns, row))
+            artid = artifact["artid"]
+
+            with connection.cursor() as cursor:
+                cursor.execute("SELECT Creators FROM ARTIFACT_CREATORS WHERE ArtID = %s", [artid])
+                creators = [row[0] for row in cursor.fetchall()]
+
+                cursor.execute("SELECT Ratings FROM ARTIFACT_RATINGS WHERE ArtID = %s", [artid])
+                ratings = [row[0] for row in cursor.fetchall()]
+
+                cursor.execute("""
+                    SELECT A.First_Name, A.Middle_Name, A.Last_Name, A.Date_of_Birth
+                    FROM ARTIST A
+                    JOIN CREATES C ON A.AID = C.AID
+                    WHERE C.ArtID = %s
+                """, [artid])
+                artists = [
+                    {
+                        "first_name": a[0],
+                        "middle_name": a[1],
+                        "last_name": a[2],
+                        "date_of_birth": a[3]
+                    }
+                    for a in cursor.fetchall()
+                ]
+
+            artifact["creators"] = creators
+            artifact["ratings"] = ratings
+            artifact["artists"] = artists
+            artifacts.append(artifact)
+
+        return Response({"artifacts": artifacts}, status=200)
+    except Exception as e:
+        return Response({"message": str(e)}, status=500)
+
+# function for adding an artifact
+@api_view(["POST"])
+def add_artifact(request):
+    data = request.data
+
+    required_fields = ["artid", "name", "description", "year_made", "display_status", "exid", "semail"]
+    for field in required_fields:
+        if not data.get(field):
+            return Response({"message": f"Missing required field: {field}"}, status=400)
+
+    try:
+        with connection.cursor() as cursor:
+            # Check for duplicate ArtID
+            cursor.execute("SELECT 1 FROM ARTIFACT WHERE ArtID = %s", [data["artid"]])
+            if cursor.fetchone():
+                return Response({"message": "ArtID already exists."}, status=400)
+
+            # Insert new artifact
+            cursor.execute("""
+                INSERT INTO ARTIFACT (ArtID, Name, Description, Year_Made, Display_Status, ExID, SEmail)
+                VALUES (%s, %s, %s, %s, %s, %s, %s)
+            """, [
+                data["artid"],
+                data["name"],
+                data["description"],
+                data["year_made"],
+                data["display_status"],
+                data["exid"],
+                data["semail"]
+            ])
+
+        return Response({"message": "Artifact added successfully."}, status=200)
+
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        return Response({"message": f"Error: {str(e)}"}, status=500)
+
+@api_view(["POST"])
+def update_artifact(request):
+    data = request.data
+    required_fields = ["artid", "name", "description", "year_made", "display_status", "exid"]
+
+    for field in required_fields:
+        if not data.get(field):
+            return Response({"message": f"Missing field: {field}"}, status=400)
+
+    try:
+        with connection.cursor() as cursor:
+            cursor.execute("""
+                UPDATE ARTIFACT SET
+                Name = %s,
+                Description = %s,
+                Year_Made = %s,
+                Display_Status = %s,
+                ExID = %s
+                WHERE ArtID = %s
+            """, [
+                data["name"],
+                data["description"],
+                data["year_made"],
+                data["display_status"],
+                data["exid"],
+                data["artid"]
+            ])
+
+        return Response({"message": "Artifact updated successfully."})
+    except Exception as e:
+        return Response({"message": f"Update failed: {str(e)}"}, status=500)
+
+
+@api_view(["POST"])
+def delete_artifact(request):
+    artid = request.data.get("artid")
+
+    if not artid:
+        return Response({"message": "Artifact ID is required."}, status=400)
+
+    try:
+        with connection.cursor() as cursor:
+            cursor.execute("DELETE FROM ARTIFACT WHERE ArtID = %s", [artid])
+        return Response({"message": "Artifact deleted successfully."})
+    except Exception as e:
+        return Response({"message": f"Delete failed: {str(e)}"}, status=500)
+
+@api_view(['POST'])
+def add_exhibit(request):
+    data = request.data
+    required_fields = ['exid', 'name', 'address']
+
+    for field in required_fields:
+        value = data.get(field)
+        if not value or str(value).strip() == "":
+            return Response({"message": f"Missing required field: {field}"}, status=400)
+
+    exid = data['exid']
+    name = data['name']
+    address = data['address']
+
+    try:
+        with connection.cursor() as cursor:
+            cursor.execute("""
+                INSERT INTO EXHIBIT (ExID, Name, Address)
+                VALUES (%s, %s, %s)
+            """, [exid, name, address])
+
+        return Response({"message": "Exhibit added successfully."}, status=200)
+
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        return Response({"message": f"Error: {str(e)}"}, status=500)
+
+@api_view(['POST'])
+def update_exhibit(request):
+    data = request.data
+    exid = data.get('exid')
+    name = data.get('name')
+
+    if not exid:
+        return Response({"message": "Exhibit ID is required."}, status=400)
+
+    try:
+        with connection.cursor() as cursor:
+            cursor.execute("""
+                UPDATE EXHIBIT SET Name = %s WHERE ExID = %s
+            """, [name, exid])
+
+        return Response({"message": "Exhibit updated successfully."}, status=200)
+
+    except Exception as e:
+        return Response({"message": f"Update failed: {str(e)}"}, status=500)
+
+@api_view(['POST'])
+def delete_exhibit(request):
+    data = request.data
+    exid = data.get('exid')
+
+    if not exid:
+        return Response({"message": "Exhibit ID is required."}, status=400)
+
+    try:
+        with connection.cursor() as cursor:
+            cursor.execute("DELETE FROM EXHIBIT WHERE ExID = %s", [exid])
+
+        return Response({"message": "Exhibit deleted successfully."}, status=200)
+
+    except Exception as e:
+        return Response({"message": f"Delete failed: {str(e)}"}, status=500)
+
+@api_view(['GET'])
+def get_exhibits(request):
+    address = request.GET.get('address')
+
+    if not address:
+        return Response({"message": "Museum address is required."}, status=400)
+
+    try:
+        with connection.cursor() as cursor:
+            cursor.execute("SELECT ExID, Name FROM EXHIBIT WHERE Address = %s", [address])
+            exhibits = cursor.fetchall()
+            result = [{"exid": row[0], "name": row[1]} for row in exhibits]
+
+        return Response({"exhibits": result}, status=200)
+    except Exception as e:
+        return Response({"message": f"Server error: {str(e)}"}, status=500)
 
 
 # Browse visitor
@@ -347,42 +602,9 @@ def add_visited_museum(v_email, address):
         cursor.execute(query, [v_email, address])
         return cursor.rowcount > 0
     
-# Browse visited museums
-@api_view(['GET'])
-def browse_visited_museums(request):
-    v_email = request.query_params.get('email')
 
-    if not v_email:
-        return Response({"message": "Missing email"}, status=400)
 
-    try:
-        with connection.cursor() as cursor:
-            # Get username
-            cursor.execute("SELECT Username FROM USER WHERE Email = %s", [v_email])
-            user = cursor.fetchone()
 
-            if not user:
-                return Response({"message": "User not found"}, status=404)
-
-            username = user[0]
-
-            # Get visited museums
-            cursor.execute("""
-                SELECT M.Name, M.Address
-                FROM VISITS AS V
-                JOIN MUSEUM AS M ON V.Address = M.Address
-                WHERE V.VEmail = %s
-            """, [v_email])
-            museums = cursor.fetchall()
-            museum_data = [{"name": row[0], "address": row[1]} for row in museums]
-
-        return Response({
-            "username": username,
-            "visitedMuseums": museum_data
-        })
-
-    except Exception as e:
-        return Response({"message": str(e)}, status=500)
 
 # Select museum functions
 def select_museum(address):
@@ -393,16 +615,6 @@ def select_museum(address):
     WHERE Address = %s
     """
     return execute_query(query, [address])
-
-# Browse artifacts
-def browse_artifacts(name):
-    """Search artifacts by name"""
-    query = """
-    SELECT ArtID, Name, Description, Year_Made, ExID
-    FROM ARTIFACT
-    WHERE Name = %s
-    """
-    return execute_query(query, [name])
 
 # Select artifact
 def select_artifact(art_id):
@@ -521,16 +733,6 @@ def manage_artifacts(s_email):
     """
     return execute_query(query, [s_email])
 
-# Add artifact
-def add_artifact(art_id, name, description, year_made, s_email, ex_id):
-    query = """
-    INSERT INTO ARTIFACT
-    VALUES (%s, %s, %s, %s, %s, %s, 'On Display')
-    """
-    with connection.cursor() as cursor:
-        cursor.execute(query, [art_id, name, description, year_made, s_email, ex_id])
-        return cursor.rowcount > 0
-
 # Select artifact
 def select_artifact(art_id):
     query = """
@@ -626,14 +828,7 @@ def manage_exhibits(s_email):
     return execute_query(query, [s_email])
 
 # Add exhibit
-def add_exhibit(ex_id, name, address):
-    query = """
-    INSERT INTO EXHIBIT
-    VALUES (%s, %s, %s)
-    """
-    with connection.cursor() as cursor:
-        cursor.execute(query, [ex_id, name, address])
-        return cursor.rowcount > 0
+
 
 # Remove exhibit
 def remove_exhibit(ex_id, name, address):

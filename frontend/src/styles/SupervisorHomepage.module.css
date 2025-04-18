@@ -268,32 +268,29 @@ h3 {
 
 /* === TABLE === */
 
-.employeeTable {
-	width: 100%;
-	margin-top: 1rem;
-	border-collapse: collapse;
-	font-size: 0.95rem;
-	border-radius: 8px;
-	overflow: hidden;
+.table {
+  width: 100%;
+  margin-top: 1rem;
+  color: white;
+  border-collapse: collapse;
+  font-size: 0.95rem;
+  border-radius: 8px;
+  overflow: hidden;
 }
 
-.employeeTable th {
-	background-color: rgba(255, 255, 255, 0.2);
-	color: #f2f2f2;
-	font-weight: 600;
-	padding: 0.75rem;
+.table th,
+.table td {
+  border: 1px solid #ccc;
+  padding: 0.6rem;
+  text-align: left;
+  background-color: rgba(255, 255, 255, 0.05);
 }
 
-.employeeTable td {
-	background-color: rgba(255, 255, 255, 0.05);
-	color: white;
-	padding: 0.6rem;
-	border-bottom: 1px solid #555;
+.table th {
+  background-color: rgba(255, 255, 255, 0.2);
+  font-weight: 600;
 }
 
-.employeeTable tr:hover {
-	background-color: rgba(255, 255, 255, 0.15);
-}
 
 /* === EDIT FORM INLINE === */
 
@@ -334,4 +331,13 @@ h3 {
 	font-size: 1rem;
 	border-radius: 6px;
 	border: 1px solid #ccc;
+}
+
+.artifactCard {
+  background-color: rgba(255, 255, 255, 0.08);
+  border: 1px solid #ccc;
+  padding: 1rem;
+  border-radius: 8px;
+  margin-bottom: 1rem;
+  color: white;
 }
