@@ -13,6 +13,7 @@ import BrowseArtists from './pages/BrowseArtists';
 import SupervisorLogin from './pages/SupervisorLogin';
 import SupervisorRegister from './pages/SupervisorRegister';
 import SupervisorHomepage from './pages/SupervisorHomepage';
+import ManageArtifacts from './pages/ManageArtifacts';
 
 function App() {
   return (
@@ -30,6 +31,7 @@ function App() {
         <Route path="/supervisor-login" element={<SupervisorLogin />} />
         <Route path="/supervisor-register" element={<SupervisorRegister />} />
         <Route path="/supervisor-homepage" element={<SupervisorHomepage />} />
+        <Route path="/manage-artifacts" element={<ManageArtifacts />} />
       </Routes>
     </Router>
   );

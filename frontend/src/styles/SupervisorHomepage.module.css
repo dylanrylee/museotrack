@@ -1,149 +1,337 @@
-  
-.signOutButton {
-    margin-top: 1rem;
-    padding: 0.6rem 1.2rem;
-    background-color: #a00;
-    color: white;
-    border: none;
-    border-radius: 8px;
-    cursor: pointer;
-    font-weight: bold;
-}
-  
-.signOutButton:hover {
-    background-color: #d00;
-    transition: background-color 0.3s;
-}
-  
 body {
-    font-family: 'Merriweather';
-    font-weight: 300;
-    background-image: url('../assets/background.jpg');
-    background-size: cover;
-    background-repeat: no-repeat;
-    background-attachment: fixed; 
-    background-position: center;
-    background-color: rgb(165, 149, 103);
+	font-family: 'Merriweather', serif;
+	font-weight: 300;
+	background-image: url('../assets/background.jpg');
+	background-size: cover;
+	background-repeat: no-repeat;
+	background-attachment: fixed;
+	background-position: center;
+	background-color: #a59567;
+	margin: 0;
+	padding: 0;
+}
+
+h2 {
+	color: antiquewhite;
 }
 
 h3 {
-  margin-top: 40px;
-  color: white;
-  text-align: left;
-  width: 100%;
+	margin-top: 40px;
+	color: white;
+	text-align: left;
+	width: 100%;
 }
 
-.logo {
-    display: grid; 
-    place-items: center; 
-    background: rgba(0, 0, 0, 0.6);
-    position: fixed;
-    top: 5%;
-    width: 25%;
-    left: 5%;
-    height: 10%;
-    border-radius: 15px;
-    border-color: white;
-    border-style: solid;
-  }
-  
-  .logo p {
-    color: white;
-    font-size: 25px;
-    font-weight: 1000;
-  }
-  
-  .menu {
-    display: grid; 
-    background: rgba(0, 0, 0, 0.6);
-    position: fixed;
-    top: 15%;
-    width: 25%;
-    height: 55%; 
-    left: 5%;
-    border-radius: 15px;
-    border-color: white;
-    border-style: solid;
-    padding: 1rem 0; 
-  }
-  
-  
-  .menu p {
-    display: block;
-    color: white;
-    place-items: center;
-    font-style: normal;
-    text-decoration: none;
-    position: relative;
-    width: 100%;
-    height: 30px;
-  }
-  
-  .menu a {
-    display: block;
-    color: white;
-    font-style: normal;
-    text-decoration: none;
-    position: relative;
-    place-items: center;
-  }
-  
-  .menu a:hover {
-    background-color: rgba(255, 255, 255, 0.6); 
-    background-size: cover;
-    color: black;
-    width: 100%;
-    text-align: center;
-    font-weight: bold;
-    transition: 0.6s all;
-  }
-  
-  .main {
-    display: grid; 
-    place-items: center; 
-    background: rgba(0, 0, 0, 0.6);
-    position: fixed;
-    top: 15%;           
-    height: 65%;         
-    width: 55%;
-    left: 35%;          
-    border-radius: 15px;
-    border-color: white;
-    border-style: solid;
-  }
-  
-  .main p {
-    color: white;
-  }
-  
-  .main form {
-    color: white;
-  }
-  
-  .searchInput {
-    padding: 0.4rem;
-    font-size: 1rem;
-    border-radius: 6px;
-    border: 1px solid #ccc;
-  }
-  
-  h2 {
-    color: antiquewhite;
-  }
+/* === HEADER / MENU === */
 
-  .signOutButton {
-    margin-top: 1rem;
-    padding: 0.5rem 1.2rem;
-    background-color: #cc3333;
-    color: white;
-    border: none;
-    border-radius: 6px;
-    cursor: pointer;
-    font-weight: bold;
-    transition: background 0.3s;
-  }
-  
-  .signOutButton:hover {
-    background-color: #a10000;
-  }
-  
+.logo {
+	display: grid;
+	place-items: center;
+	background: rgba(0, 0, 0, 0.6);
+	position: fixed;
+	top: 5%;
+	width: 25%;
+	left: 5%;
+	height: 10%;
+	border-radius: 15px;
+	border-color: white;
+	border-style: solid;
+}
+
+.logo p {
+	color: white;
+	font-size: 25px;
+	font-weight: 1000;
+}
+
+.menu {
+	display: grid;
+	background: rgba(0, 0, 0, 0.6);
+	position: fixed;
+	top: 15%;
+	width: 25%;
+	height: 55%;
+	left: 5%;
+	border-radius: 15px;
+	border-color: white;
+	border-style: solid;
+	padding: 1rem 0;
+}
+
+.menu p {
+	display: block;
+	color: white;
+	place-items: center;
+	font-style: normal;
+	text-decoration: none;
+	position: relative;
+	width: 100%;
+	height: 30px;
+}
+
+.menu a {
+	display: block;
+	color: white;
+	font-style: normal;
+	text-decoration: none;
+	position: relative;
+	place-items: center;
+}
+
+.menu a:hover {
+	background-color: rgba(255, 255, 255, 0.6);
+	background-size: cover;
+	color: black;
+	width: 100%;
+	text-align: center;
+	font-weight: bold;
+	transition: 0.6s all;
+}
+
+/* === MAIN === */
+
+.main {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	overflow-y: auto;
+	background: rgba(0, 0, 0, 0.6);
+	position: fixed;
+	top: 15%;
+	height: 65%;
+	width: 55%;
+	left: 35%;
+	border-radius: 15px;
+	border: 2px solid white;
+	padding: 1.5rem;
+	box-sizing: border-box;
+}
+
+.main p {
+	color: white;
+}
+
+.main form {
+	color: white;
+}
+
+/* === BUTTONS === */
+
+.signOutButton {
+	margin-top: 1rem;
+	padding: 0.6rem 1.2rem;
+	background-color: #a00;
+	color: white;
+	border: none;
+	border-radius: 8px;
+	cursor: pointer;
+	font-weight: bold;
+}
+
+.signOutButton:hover {
+	background-color: #d00;
+	transition: background-color 0.3s;
+}
+
+.addEmployeeButton {
+	margin: 1rem 0;
+	padding: 0.5rem 1rem;
+	background-color: #3366cc;
+	color: white;
+	border: none;
+	border-radius: 6px;
+	cursor: pointer;
+	font-weight: bold;
+	transition: background-color 0.3s;
+}
+
+.addEmployeeButton:hover {
+	background-color: #224499;
+}
+
+.editButton {
+	background-color: #ffc107;
+	color: black;
+	border: none;
+	padding: 0.4rem 0.8rem;
+	border-radius: 6px;
+	font-weight: bold;
+	cursor: pointer;
+	transition: background-color 0.3s ease;
+}
+
+.editButton:hover {
+	background-color: #d39e00;
+}
+
+.registerButton,
+.cancelButton {
+	margin: 0.5rem;
+	padding: 0.5rem 1.2rem;
+	border: none;
+	border-radius: 5px;
+	font-weight: bold;
+}
+
+.registerButton {
+	background-color: #28a745;
+	color: white;
+}
+
+.registerButton:hover {
+	background-color: darkgreen;
+	cursor: pointer;
+}
+
+.cancelButton {
+	background-color: #ccc;
+}
+
+.cancelButton:hover {
+	background-color: #979090;
+	cursor: pointer;
+}
+
+.deleteButton {
+	background-color: #dc3545;
+	color: white;
+	padding: 0.5rem 1.2rem;
+	border: none;
+	border-radius: 5px;
+	font-weight: bold;
+	margin: 0.5rem;
+	cursor: pointer;
+}
+
+.deleteButton:hover {
+	background-color: #a71d2a;
+}
+
+.modalBackdrop {
+	position: fixed;
+	top: 0;
+	left: 0;
+	right: 0;
+	bottom: 0;
+	background-color: rgba(0, 0, 0, 0.6);
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	padding: 1rem;
+	overflow-y: auto;
+	z-index: 9999; /* HIGH priority */
+}
+
+.editTitle {
+	color: brown;
+	margin-bottom: 1rem;
+}
+
+.modalBox {
+	background: #fffdf5;
+	padding: 2rem;
+	border-radius: 14px;
+	width: 100%;
+	max-width: 500px;
+	box-shadow: 0 0 20px rgba(0, 0, 0, 0.25);
+	text-align: left;
+	box-sizing: border-box;
+	max-height: 95vh;
+	overflow-y: auto;
+}
+
+.modalBox h2 {
+	margin-bottom: 1rem;
+  color: brown;
+}
+
+.modalBox label {
+	font-weight: bold;
+	margin-top: 1rem;
+	display: block;
+}
+
+.modalBox input {
+	padding: 0.6rem;
+	width: 100%;
+	margin-top: 0.3rem;
+	margin-bottom: 1rem;
+	border-radius: 6px;
+	border: 1px solid #aaa;
+	font-size: 0.95rem;
+}
+
+.modalBox button {
+	margin-top: 0.5rem;
+	margin-right: 0.5rem;
+}
+
+/* === TABLE === */
+
+.employeeTable {
+	width: 100%;
+	margin-top: 1rem;
+	border-collapse: collapse;
+	font-size: 0.95rem;
+	border-radius: 8px;
+	overflow: hidden;
+}
+
+.employeeTable th {
+	background-color: rgba(255, 255, 255, 0.2);
+	color: #f2f2f2;
+	font-weight: 600;
+	padding: 0.75rem;
+}
+
+.employeeTable td {
+	background-color: rgba(255, 255, 255, 0.05);
+	color: white;
+	padding: 0.6rem;
+	border-bottom: 1px solid #555;
+}
+
+.employeeTable tr:hover {
+	background-color: rgba(255, 255, 255, 0.15);
+}
+
+/* === EDIT FORM INLINE === */
+
+.editSection {
+	display: flex;
+	flex-direction: column;
+	gap: 0.5rem;
+	margin-top: 0.5rem;
+}
+
+.editSection input {
+	padding: 0.4rem;
+	font-size: 0.9rem;
+	border-radius: 4px;
+	border: 1px solid #aaa;
+}
+
+.editSection button {
+	padding: 0.4rem 0.8rem;
+	font-size: 0.9rem;
+	border: none;
+	border-radius: 4px;
+	font-weight: bold;
+	cursor: pointer;
+}
+
+.saveButton {
+	background-color: #007bff;
+	color: white;
+}
+
+.saveButton:hover {
+	background-color: #0056b3;
+}
+
+.searchInput {
+	padding: 0.4rem;
+	font-size: 1rem;
+	border-radius: 6px;
+	border: 1px solid #ccc;
+}

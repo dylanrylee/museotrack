@@ -86,25 +86,28 @@ def login_supervisor_employee(request):
             cursor.execute("SELECT Password FROM USER WHERE Email = %s", [email])
             result = cursor.fetchone()
 
-        if not result:
-            return Response({"message": "Invalid email or password"}, status=401)
+            if not result:
+                return Response({"message": "Invalid email or password"}, status=401)
 
-        hashed_pw = result[0]
-        if not check_password(password, hashed_pw):
-            return Response({"message": "Invalid email or password"}, status=401)
+            hashed_pw = result[0]
+            if not check_password(password, hashed_pw):
+                return Response({"message": "Invalid email or password"}, status=401)
 
         with connection.cursor() as cursor:
-            # Check if supervisor
+            # First check supervisor
             cursor.execute("SELECT * FROM SUPERVISOR WHERE SEmail = %s", [email])
-            if cursor.fetchone():
-                return Response({"message": "Supervisor login success", "role": "supervisor"}, status=200)
+            is_supervisor = cursor.fetchone()
 
-            # Check if employee
+            # Then check employee
             cursor.execute("SELECT * FROM EMPLOYEE WHERE EEmail = %s", [email])
-            if cursor.fetchone():
-                return Response({"message": "Employee login success", "role": "employee"}, status=200)
+            is_employee = cursor.fetchone()
 
-        return Response({"message": "User is not a staff member"}, status=403)
+        if is_supervisor:
+            return Response({"message": "Supervisor login success", "role": "supervisor"}, status=200)
+        elif is_employee:
+            return Response({"message": "Employee login success", "role": "employee"}, status=200)
+        else:
+            return Response({"message": "User is not a staff member"}, status=403)
 
     except Exception as e:
         return Response({"message": f"Server error: {str(e)}"}, status=500)
@@ -193,16 +196,23 @@ def get_supervisor_employees(request):
 
     try:
         with connection.cursor() as cursor:
-            # Get employees under this supervisor
             cursor.execute("""
-                SELECT E.EEmail, U.Username
+                SELECT E.EEmail, U.First_Name, U.Last_Name, U.Username
                 FROM EMPLOYEE E
                 JOIN USER U ON E.EEmail = U.Email
                 WHERE E.SEmail = %s
             """, [email])
 
             employees = cursor.fetchall()
-            employee_list = [{"email": e[0], "username": e[1]} for e in employees]
+            employee_list = [
+                {
+                    "email": e[0],
+                    "firstName": e[1],
+                    "lastName": e[2],
+                    "username": e[3]
+                }
+                for e in employees
+            ]
 
         return Response({"employees": employee_list})
 
@@ -211,17 +221,78 @@ def get_supervisor_employees(request):
 
 
 # Register account for employee
-def register_employee(e_email, first_name, middle_name, last_name, username, password, year_of_birth, s_email):
-    hashed_password = make_password(password)
+@api_view(['POST'])
+def register_employee(request):
+    data = request.data
+    required_fields = ['email', 'username', 'firstName', 'lastName', 'password', 'yearOfBirth', 'supervisorEmail', 'museumAddress']
     
-    queries = [
-        ("INSERT INTO USER VALUES (%s, %s, %s, %s, %s, %s, %s)", 
-         [e_email, first_name, middle_name, last_name, username, hashed_password, year_of_birth]),
-        ("INSERT INTO EMPLOYEE VALUES (%s, %s, NULL)", 
-         [e_email, s_email])
-    ]
+    for field in required_fields:
+        if field not in data or data[field] == '':
+            return Response({"message": f"Missing field: {field}"}, status=400)
+
+    try:
+        hashed_password = make_password(data['password'])  # ✅ FIXED
+
+        with connection.cursor() as cursor:
+            # Add to USER
+            cursor.execute("""
+                INSERT INTO USER (Email, First_Name, Middle_Name, Last_Name, Username, Password, Year_of_Birth)
+                VALUES (%s, %s, %s, %s, %s, %s, %s)
+            """, [
+                data['email'], data['firstName'], data.get('middleName', ''), data['lastName'],
+                data['username'], hashed_password, data['yearOfBirth']
+            ])
+
+            # Add to EMPLOYEE
+            cursor.execute("""
+                INSERT INTO EMPLOYEE (EEmail, SEmail, MuseumAddress)
+                VALUES (%s, %s, %s)
+            """, [
+                data['email'], data['supervisorEmail'], data['museumAddress']
+            ])
+
+        return Response({"message": "Employee registered successfully."})
     
-    return execute_transaction(queries)
+    except Exception as e:
+        return Response({"message": f"Server error: {str(e)}"}, status=500)
+
+@api_view(["POST"])
+def update_employee(request):
+    email = request.data.get("email")
+    new_username = request.data.get("newUsername")
+    new_password = request.data.get("newPassword")
+
+    if not email:
+        return Response({"message": "Email is required."}, status=400)
+
+    if not new_username and not new_password:
+        return Response({"message": "No update fields provided."}, status=400)
+
+    try:
+        with connection.cursor() as cursor:
+            if new_username:
+                cursor.execute("UPDATE USER SET Username = %s WHERE Email = %s", [new_username, email])
+            if new_password:
+                cursor.execute("UPDATE USER SET Password = %s WHERE Email = %s", [new_password, email])
+
+        return Response({"message": "Employee updated successfully."})
+    except Exception as e:
+        return Response({"message": f"Update failed: {str(e)}"}, status=500)
+
+@api_view(["POST"])
+def delete_employee(request):
+    email = request.data.get("email")
+
+    if not email:
+        return Response({"message": "Email is required."}, status=400)
+
+    try:
+        with connection.cursor() as cursor:
+            cursor.execute("DELETE FROM USER WHERE Email = %s", [email])
+        return Response({"message": "Employee deleted successfully."})
+    except Exception as e:
+        return Response({"message": f"Delete failed: {str(e)}"}, status=500)
+
 
 # Browse visitor
 def browse_visitor(v_email):
@@ -771,29 +842,4 @@ def remove_review(v_email, art_id):
     """
     with connection.cursor() as cursor:
         cursor.execute(query, [v_email, art_id])
-        return cursor.rowcount > 0
-
-# delete employee
-def delete_employee(e_email):
-    query = """
-    DELETE FROM EMPLOYEE  
-    WHERE EEmail = %s
-    """
-    with connection.cursor() as cursor:
-        cursor.execute(query, [e_email])
-        return cursor.rowcount > 0
-
-# edit employee username
-def edit_employee_username(e_email, new_username):
-    query = """
-    UPDATE USER
-    SET Username = %s
-    WHERE Email = %s
-        AND Email IN (
-            SELECT EEmail
-            FROM EMPLOYEE
-        )
-    """
-    with connection.cursor() as cursor:
-        cursor.execute(query, [new_username, e_email])
         return cursor.rowcount > 0

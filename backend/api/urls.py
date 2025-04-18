@@ -12,6 +12,9 @@ urlpatterns = [
     path('register-supervisor/', register_supervisor),
     path('get-supervisor-employees/', get_supervisor_employees),
     path('get-supervisor-info/', get_supervisor_info),
+    path('register-employee/', register_employee),
+    path('update-employee/', update_employee),
+    path('delete-employee/', delete_employee),
     
     # JWT auth endpoints
     path('token/', CustomTokenObtainPairView.as_view(), name='token_obtain_pair'),
