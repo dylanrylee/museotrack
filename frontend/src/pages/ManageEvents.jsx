@@ -14,6 +14,7 @@ const ManageEvents = () => {
   const [editData, setEditData] = useState({ evid: "", name: "", start_date: "", end_date: "", exid: "" });
 
   const supervisorMuseumAddress = localStorage.getItem("museumAddress");
+  const today = new Date().toISOString().split("T")[0]; // YYYY-MM-DD
 
   const fetchEvents = async () => {
     try {
@@ -160,9 +161,9 @@ const ManageEvents = () => {
               <label>Name:</label>
               <input name="name" value={formData.name} onChange={handleChange} required />
               <label>Start Date:</label>
-              <input type="date" name="start_date" value={formData.start_date} onChange={handleChange} required />
+              <input type="date" name="start_date" value={formData.start_date} onChange={handleChange} required min={today} />
               <label>End Date:</label>
-              <input type="date" name="end_date" value={formData.end_date} onChange={handleChange} required />
+              <input type="date" name="end_date" value={formData.end_date} onChange={handleChange} required min={today} />
               <label>Exhibit ID:</label>
               <input name="exid" value={formData.exid} onChange={handleChange} required />
               <button type="submit" className={styles.registerButton}>Submit</button>
@@ -180,9 +181,9 @@ const ManageEvents = () => {
               <label>Name:</label>
               <input name="name" value={editData.name} onChange={handleEditChange} />
               <label>Start Date:</label>
-              <input type="date" name="start_date" value={editData.start_date} onChange={handleEditChange} />
+              <input type="date" name="start_date" value={editData.start_date} onChange={handleEditChange} min={today} />
               <label>End Date:</label>
-              <input type="date" name="end_date" value={editData.end_date} onChange={handleEditChange} />
+              <input type="date" name="end_date" value={editData.end_date} onChange={handleEditChange} min={today} />
               <label>Exhibit ID:</label>
               <input name="exid" value={editData.exid} onChange={handleEditChange} />
               <button type="submit" className={styles.registerButton}>Submit Changes</button>

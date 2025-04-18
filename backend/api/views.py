@@ -548,6 +548,121 @@ def get_exhibits(request):
     except Exception as e:
         return Response({"message": f"Server error: {str(e)}"}, status=500)
 
+@api_view(['GET'])
+def get_events(request):
+    address = request.GET.get('address')
+    if not address:
+        return Response({"message": "Museum address required"}, status=400)
+
+    try:
+        with connection.cursor() as cursor:
+            cursor.execute("""
+                SELECT E.EvID, E.Name, E.Start_Date, E.End_Date, X.Name
+                FROM EVENT E
+                JOIN PART_OF P ON E.EvID = P.EvID
+                JOIN EXHIBIT X ON P.ExID = X.ExID
+                WHERE E.Address = %s
+            """, [address])
+            rows = cursor.fetchall()
+
+        events = [{
+            "evid": r[0],
+            "name": r[1],
+            "start_date": r[2],
+            "end_date": r[3],
+            "exhibit_name": r[4]
+        } for r in rows]
+
+        return Response({"events": events})
+    except Exception as e:
+        return Response({"message": str(e)}, status=500)
+
+@api_view(['POST'])
+def add_event(request):
+    data = request.data
+    evid = data.get('evid')
+    name = data.get('name')
+    start_date = data.get('start_date')
+    end_date = data.get('end_date')
+    exid = data.get('exid')
+    address = data.get('address')
+
+    if not all([evid, name, start_date, end_date, exid, address]):
+        return Response({"message": "Missing required fields."}, status=400)
+
+    try:
+        with connection.cursor() as cursor:
+            # Check if the exhibit exists
+            cursor.execute("SELECT 1 FROM EXHIBIT WHERE ExID = %s", [exid])
+            if not cursor.fetchone():
+                return Response({"message": "Exhibit not found."}, status=404)
+
+            # Insert into EVENT
+            cursor.execute("""
+                INSERT INTO EVENT (EvID, Name, Start_Date, End_Date, Address)
+                VALUES (%s, %s, %s, %s, %s)
+            """, [evid, name, start_date, end_date, address])
+
+            # Insert into PART_OF
+            cursor.execute("""
+                INSERT INTO PART_OF (EvID, ExID)
+                VALUES (%s, %s)
+            """, [evid, exid])
+
+        return Response({"message": "Event added successfully."}, status=200)
+
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        return Response({"message": f"Add event failed: {str(e)}"}, status=500)
+
+@api_view(['POST'])
+def update_event(request):
+    data = request.data
+    evid = data.get('evid')
+    name = data.get('name')
+    start_date = data.get('start_date')
+    end_date = data.get('end_date')
+    exid = data.get('exid')
+
+    if not evid:
+        return Response({"message": "EvID is required."}, status=400)
+
+    try:
+        with connection.cursor() as cursor:
+            if name:
+                cursor.execute("UPDATE EVENT SET Name = %s WHERE EvID = %s", [name, evid])
+            if start_date:
+                cursor.execute("UPDATE EVENT SET Start_Date = %s WHERE EvID = %s", [start_date, evid])
+            if end_date:
+                cursor.execute("UPDATE EVENT SET End_Date = %s WHERE EvID = %s", [end_date, evid])
+            if exid:
+                cursor.execute("UPDATE PART_OF SET ExID = %s WHERE EvID = %s", [exid, evid])
+
+        return Response({"message": "Event updated successfully."})
+    except Exception as e:
+        return Response({"message": f"Update failed: {str(e)}"}, status=500)
+
+@api_view(['POST'])
+def delete_event(request):
+    evid = request.data.get('evid')
+
+    if not evid:
+        return Response({"message": "EvID required"}, status=400)
+
+    try:
+        with connection.cursor() as cursor:
+            cursor.execute("DELETE FROM EVENT WHERE EvID = %s", [evid])
+
+        return Response({"message": "Event deleted successfully."})
+    except Exception as e:
+        return Response({"message": f"Delete failed: {str(e)}"}, status=500)
+
+
+
+
+
+
 
 # Browse visitor
 def browse_visitor(v_email):
