@@ -941,7 +941,7 @@ def record_edit_exhibit(request):
 
 @api_view(["GET"])
 def get_edit_logs(request):
-    semail = request.GET.get("email")  # 🔥 Changed from 'semail' to 'email'
+    semail = request.GET.get("email") 
 
     if not semail:
         return Response({"message": "Missing supervisor email."}, status=400)
