@@ -338,6 +338,43 @@ def delete_employee(request):
         return Response({"message": f"Delete failed: {str(e)}"}, status=500)
 
 @api_view(["GET"])
+def get_employee_info(request):
+    email = request.GET.get("email")
+    if not email:
+        return Response({"message": "Missing employee email."}, status=400)
+
+    try:
+        with connection.cursor() as cursor:
+            cursor.execute("""
+                SELECT 
+                    E.EEmail, 
+                    U.Username, 
+                    E.SEmail, 
+                    E.MuseumAddress, 
+                    M.Name
+                FROM EMPLOYEE E
+                JOIN USER U ON E.EEmail = U.Email
+                JOIN MUSEUM M ON E.MuseumAddress = M.Address
+                WHERE E.EEmail = %s
+            """, [email])
+            row = cursor.fetchone()
+
+            if not row:
+                return Response({"message": "Employee not found."}, status=404)
+
+            data = {
+                "email": row[0],
+                "username": row[1],
+                "supervisorEmail": row[2],
+                "museumAddress": row[3],
+                "museumName": row[4],
+            }
+            return Response(data)
+
+    except Exception as e:
+        return Response({"message": str(e)}, status=500)
+
+@api_view(["GET"])
 def get_artifacts(request):
     semail = request.GET.get("semail")
 

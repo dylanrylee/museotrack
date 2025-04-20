@@ -30,7 +30,7 @@ urlpatterns = [
     path("update-artist/", update_artist),
     path("delete-artist/", delete_artist),
     path("get-artifacts-for-artist/", get_artifacts_for_artist),
-
+    path("get-employee-info/", get_employee_info),
 
     # JWT auth endpoints
     path('token/', CustomTokenObtainPairView.as_view(), name='token_obtain_pair'),

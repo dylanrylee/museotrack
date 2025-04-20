@@ -17,7 +17,10 @@ import ManageArtifacts from './pages/ManageArtifacts';
 import ManageExhibits from './pages/ManageExhibits';
 import ManageEvents from './pages/ManageEvents';
 import ManageArtists from './pages/ManageArtists';
-
+import EmployeeHomepage from './pages/EmployeeHomepage';
+import EditArtifacts from './pages/EditArtifacts';
+import EditEvents from './pages/EditEvents';
+import EditExhibits from './pages/EditExhibits';
 
 function App() {
   return (
@@ -39,6 +42,10 @@ function App() {
         <Route path="/manage-artists" element={<ManageArtists />} />
         <Route path="/manage-exhibits" element={<ManageExhibits />} />
         <Route path="/manage-events" element={<ManageEvents />} />
+        <Route path="/employee-homepage" element={<EmployeeHomepage />} />
+        <Route path="/edit-artifacts" element={<EditArtifacts />} />
+        <Route path="/edit-events" element={<EditEvents />} />
+        <Route path="/edit-exhibits" element={<EditExhibits />} />
       </Routes>
     </Router>
   );

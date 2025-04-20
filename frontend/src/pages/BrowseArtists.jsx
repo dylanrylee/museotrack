@@ -1,23 +1,82 @@
-import React from 'react';
-import Header from '../components/Header';
-import Footer from '../components/Footer';
-import Menu from '../components/Menu';
-import styles from '../styles/Pages.module.css';
+import React, { useEffect, useState } from "react";
+import Header from "../components/Header";
+import Footer from "../components/Footer";
+import EmployeeMenu from "../components/EmployeeMenu";
+import styles from "../styles/SupervisorHomepage.module.css";
+import api from "../api/client";
 
-const BrowseMuseums = () => {
+const BrowseArtists = () => {
+  const [artists, setArtists] = useState([]);
+  const [searchTerm, setSearchTerm] = useState("");
+
+  const fetchArtists = async () => {
+    try {
+      const res = await api.get("/get-artists/");
+      setArtists(res.data.artists);
+    } catch (err) {
+      console.error("Error fetching artists:", err);
+    }
+  };
+
+  useEffect(() => {
+    fetchArtists();
+  }, []);
+
+  const filteredArtists = artists.filter((artist) =>
+    `${artist.aid} ${artist.first_name} ${artist.last_name}`.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
   return (
     <>
       <Header />
-      <Menu />
+      <EmployeeMenu />
 
       <div className={styles.main}>
-        <form action="PLACEHOLDER" method="GET">
-          <p>
-            Search Artists
-            <input className={styles.searchInput} type="text" />
-          </p>
-        </form>
-        <p>This is placeholder text for the museum body.</p>
+        <h2>Artists</h2>
+        <p>Browse through the list of artists and their associated artifacts.</p>
+
+        <input
+          type="text"
+          placeholder="Search artists..."
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          className={styles.searchInput}
+        />
+
+        {filteredArtists.length === 0 ? (
+          <p style={{ color: "white", marginTop: "1rem" }}>No artists found.</p>
+        ) : (
+          <table className={styles.table}>
+            <thead>
+              <tr>
+                <th>AID</th>
+                <th>First Name</th>
+                <th>Middle Name</th>
+                <th>Last Name</th>
+                <th>Date of Birth</th>
+                <th>Artifacts</th>
+              </tr>
+            </thead>
+            <tbody>
+              {filteredArtists.map((artist) => (
+                <tr key={artist.aid}>
+                  <td>{artist.aid}</td>
+                  <td>{artist.first_name}</td>
+                  <td>{artist.middle_name}</td>
+                  <td>{artist.last_name}</td>
+                  <td>{artist.date_of_birth}</td>
+                  <td>
+                    {artist.artifacts.length > 0 ? (
+                      artist.artifacts.join(", ")
+                    ) : (
+                      <span>No artifacts</span>
+                    )}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        )}
       </div>
 
       <Footer />
@@ -25,4 +84,4 @@ const BrowseMuseums = () => {
   );
 };
 
-export default BrowseMuseums;
+export default BrowseArtists;
