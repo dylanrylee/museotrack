@@ -21,6 +21,7 @@ import EmployeeHomepage from './pages/EmployeeHomepage';
 import EditArtifacts from './pages/EditArtifacts';
 import EditEvents from './pages/EditEvents';
 import EditExhibits from './pages/EditExhibits';
+import LogsForEdits from './pages/LogsForEdits';
 
 function App() {
   return (
@@ -46,6 +47,7 @@ function App() {
         <Route path="/edit-artifacts" element={<EditArtifacts />} />
         <Route path="/edit-events" element={<EditEvents />} />
         <Route path="/edit-exhibits" element={<EditExhibits />} />
+        <Route path="/logs-edits" element={<LogsForEdits />} />
       </Routes>
     </Router>
   );

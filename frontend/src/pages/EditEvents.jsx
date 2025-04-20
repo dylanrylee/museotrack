@@ -81,13 +81,21 @@ const EditEvents = () => {
   const handleUpdateEvent = async (e) => {
     e.preventDefault();
     try {
+      // 1. Update the event
       await api.post("/update-event/", editData);
+  
+      // 2. Record the edit in EDITS_EVENTS
+      await api.post("/record-edit-event/", {
+        eemail: email,
+        evid: editData.evid,
+      });
+  
       setShowEditModal(false);
       fetchEvents(museumAddress);
     } catch (err) {
       alert(err.response?.data?.message || "Failed to update event");
     }
-  };
+  };  
 
   const filteredEvents = events.filter((ev) =>
     Object.values(ev).some((val) =>

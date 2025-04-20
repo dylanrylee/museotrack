@@ -85,16 +85,24 @@ const EditArtifacts = () => {
   const handleUpdateArtifact = async (e) => {
     e.preventDefault();
     try {
+      // 1. Update the artifact
       await api.post("/update-artifact/", {
         artid: editArtifact.artid,
         ...formData,
       });
+  
+      // 2. Record the edit
+      await api.post("/record-edit-artifact/", {
+        eemail: email,
+        artid: editArtifact.artid,
+      });
+  
       setShowEditModal(false);
       fetchArtifacts(supervisorEmail);
     } catch (err) {
       alert("Update failed");
     }
-  };
+  };  
 
   return (
     <>

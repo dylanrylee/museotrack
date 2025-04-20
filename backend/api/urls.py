@@ -31,6 +31,10 @@ urlpatterns = [
     path("delete-artist/", delete_artist),
     path("get-artifacts-for-artist/", get_artifacts_for_artist),
     path("get-employee-info/", get_employee_info),
+    path("record-edit-artifact/", record_edit_artifact),
+    path("record-edit-event/", record_edit_event),
+    path("record-edit-exhibit/", record_edit_exhibit),
+    path("get-edit-logs/", get_edit_logs),
 
     # JWT auth endpoints
     path('token/', CustomTokenObtainPairView.as_view(), name='token_obtain_pair'),

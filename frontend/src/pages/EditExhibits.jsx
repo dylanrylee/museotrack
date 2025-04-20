@@ -64,16 +64,25 @@ const EditExhibits = () => {
   const handleUpdateExhibit = async (e) => {
     e.preventDefault();
     try {
+      // 1. Update the exhibit
       await api.post("/update-exhibit/", {
         exid: editData.exid,
         name: editData.newName,
       });
+  
+      // 2. Record the edit
+      await api.post("/record-edit-exhibit/", {
+        eemail: email,
+        exid: editData.exid,
+      });
+  
       setShowEditModal(false);
       fetchExhibits(museumAddress);
     } catch (err) {
       alert(err.response?.data?.message || "Failed to update exhibit");
     }
   };
+  
 
   const filteredExhibits = exhibits.filter((ex) =>
     `${ex.exid} ${ex.name}`.toLowerCase().includes(searchTerm.toLowerCase())

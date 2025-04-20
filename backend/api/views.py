@@ -881,3 +881,106 @@ def delete_artist(request):
 
     except Exception as e:
         return Response({"message": f"Delete failed: {str(e)}"}, status=500)
+
+@api_view(["POST"])
+def record_edit_artifact(request):
+    eemail = request.data.get("eemail")
+    artid = request.data.get("artid")
+
+    if not eemail or not artid:
+        return Response({"message": "Missing EEmail or ArtID."}, status=400)
+
+    try:
+        with connection.cursor() as cursor:
+            cursor.execute("""
+                INSERT INTO EDITS_ARTIFACTS (EEmail, ArtID)
+                VALUES (%s, %s)
+            """, [eemail, artid])
+
+        return Response({"message": "Artifact edit recorded successfully."})
+    except Exception as e:
+        return Response({"message": str(e)}, status=500)
+
+
+@api_view(["POST"])
+def record_edit_event(request):
+    eemail = request.data.get("eemail")
+    evid = request.data.get("evid")
+
+    if not eemail or not evid:
+        return Response({"message": "Missing EEmail or EvID."}, status=400)
+
+    try:
+        with connection.cursor() as cursor:
+            cursor.execute("""
+                INSERT INTO EDITS_EVENTS (EEmail, EvID)
+                VALUES (%s, %s)
+            """, [eemail, evid])
+        return Response({"message": "Event edit recorded successfully."})
+    except Exception as e:
+        return Response({"message": str(e)}, status=500)
+
+
+@api_view(["POST"])
+def record_edit_exhibit(request):
+    eemail = request.data.get("eemail")
+    exid = request.data.get("exid")
+
+    if not eemail or not exid:
+        return Response({"message": "Missing EEmail or ExID."}, status=400)
+
+    try:
+        with connection.cursor() as cursor:
+            cursor.execute("""
+                INSERT INTO EDITS_EXHIBITS (EEmail, ExID)
+                VALUES (%s, %s)
+            """, [eemail, exid])
+        return Response({"message": "Exhibit edit recorded successfully."})
+    except Exception as e:
+        return Response({"message": str(e)}, status=500)
+
+@api_view(["GET"])
+def get_edit_logs(request):
+    semail = request.GET.get("email")  # 🔥 Changed from 'semail' to 'email'
+
+    if not semail:
+        return Response({"message": "Missing supervisor email."}, status=400)
+
+    try:
+        with connection.cursor() as cursor:
+            cursor.execute("""
+                SELECT a.EditID, a.EEmail, a.ArtID AS TargetID, a.EditTime, 'Artifact' AS Type, e.SEmail
+                FROM EDITS_ARTIFACTS a
+                JOIN EMPLOYEE e ON a.EEmail = e.EEmail
+                WHERE e.SEmail = %s
+                UNION ALL
+                SELECT ev.EditID, ev.EEmail, ev.EvID AS TargetID, ev.EditTime, 'Event' AS Type, e.SEmail
+                FROM EDITS_EVENTS ev
+                JOIN EMPLOYEE e ON ev.EEmail = e.EEmail
+                WHERE e.SEmail = %s
+                UNION ALL
+                SELECT ex.EditID, ex.EEmail, ex.ExID AS TargetID, ex.EditTime, 'Exhibit' AS Type, e.SEmail
+                FROM EDITS_EXHIBITS ex
+                JOIN EMPLOYEE e ON ex.EEmail = e.EEmail
+                WHERE e.SEmail = %s
+                ORDER BY EditTime DESC
+            """, [semail, semail, semail])
+
+            rows = cursor.fetchall()
+
+        logs = [
+            {
+                "edit_id": row[0],
+                "eemail": row[1],
+                "target_id": row[2],
+                "edit_time": row[3],
+                "type": row[4],
+                "semail": row[5],
+            }
+            for row in rows
+        ]
+
+        return Response({"logs": logs})
+
+    except Exception as e:
+        return Response({"message": str(e)}, status=500)

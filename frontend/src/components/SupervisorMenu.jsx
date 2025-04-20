@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import styles from '../styles/Pages.module.css';
+import styles from '../styles/SupervisorHomepage.module.css';
 
 const SupervisorMenu = () => {
   return (
@@ -10,7 +10,8 @@ const SupervisorMenu = () => {
         <p><Link to="/manage-artifacts">Manage Artifacts</Link></p>
         <p><Link to="/manage-events">Manage Events</Link></p>
         <p><Link to="/manage-exhibits">Manage Exhibits</Link></p>
-=    </div>
+        <p><Link to="/logs-edits">Logs for Edits</Link></p>
+    </div>
   );
 };
 
