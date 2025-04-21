@@ -22,6 +22,10 @@ import EditArtifacts from './pages/EditArtifacts';
 import EditEvents from './pages/EditEvents';
 import EditExhibits from './pages/EditExhibits';
 import LogsForEdits from './pages/LogsForEdits';
+import ViewEventReviews from './pages/ViewEventReviews';
+import ViewArtifactReviews from './pages/ViewArtifactReviews';
+import WriteEventReview from './pages/WriteEventReview';
+import WriteArtifactReview from './pages/WriteArtifactReview';
 
 function App() {
   return (
@@ -48,6 +52,10 @@ function App() {
         <Route path="/edit-events" element={<EditEvents />} />
         <Route path="/edit-exhibits" element={<EditExhibits />} />
         <Route path="/logs-edits" element={<LogsForEdits />} />
+        <Route path="/view-event-reviews/:eventId" element={<ViewEventReviews />} />
+        <Route path="/view-artifact-reviews/:artifactId" element={<ViewArtifactReviews />} />
+        <Route path="/write-event-review/:eventId" element={<WriteEventReview />} />
+        <Route path="/write-artifact-review/:artifactId" element={<WriteArtifactReview />} />
       </Routes>
     </Router>
   );

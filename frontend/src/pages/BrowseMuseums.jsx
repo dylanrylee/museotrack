@@ -1,23 +1,101 @@
-import React from 'react';
-import Header from '../components/Header';
-import Footer from '../components/Footer';
-import Menu from '../components/Menu';
-import styles from '../styles/Pages.module.css';
+import React, { useEffect, useState } from "react";
+import Header from "../components/Header";
+import Footer from "../components/Footer";
+import Menu from "../components/Menu";
+import styles from "../styles/Pages.module.css";
+import api from "../api/client";
 
 const BrowseMuseums = () => {
+  const [museums, setMuseums] = useState([]);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [message, setMessage] = useState("");
+
+  const fetchMuseums = async () => {
+    try {
+      const res = await api.get("/get-museums/");
+      setMuseums(res.data.museums);
+    } catch (err) {
+      console.error("Error fetching museums:", err);
+    }
+  };
+
+  useEffect(() => {
+    fetchMuseums();
+  }, []);
+
+  const handleAddToVisited = async (museumAddress) => {
+    const email = localStorage.getItem("email");
+    try {
+      await api.post("/add-visited-museum/", {
+        visitor_email: email,
+        museum_address: museumAddress,
+      });
+      setMessage("Museum added to visited list successfully!");
+      setTimeout(() => setMessage(""), 3000);
+    } catch (err) {
+      setMessage(err.response?.data?.message || "Failed to add museum to visited list");
+      setTimeout(() => setMessage(""), 3000);
+    }
+  };
+
+  const filteredMuseums = museums.filter((museum) =>
+    `${museum.address} ${museum.name}`.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
   return (
     <>
       <Header />
       <Menu />
 
       <div className={styles.main}>
-        <form action="PLACEHOLDER" method="GET">
-          <p>
-            Search Museums
-            <input className={styles.searchInput} type="text" />
+        <h2>Museums</h2>
+        <p>Browse through the list of museums and add them to your visited list.</p>
+
+        <input
+          type="text"
+          placeholder="Search museums..."
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          className={styles.searchInput}
+        />
+
+        {message && (
+          <p style={{ color: message.includes("success") ? "green" : "red", marginTop: "1rem" }}>
+            {message}
           </p>
-        </form>
-        <p>This is placeholder text for the museum body.</p>
+        )}
+
+        {filteredMuseums.length === 0 ? (
+          <p style={{ color: "white", marginTop: "1rem" }}>No museums found.</p>
+        ) : (
+          <table className={styles.table}>
+            <thead>
+              <tr>
+                <th>Name</th>
+                <th>Address</th>
+                <th>Phone</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {filteredMuseums.map((museum) => (
+                <tr key={museum.address}>
+                  <td>{museum.name}</td>
+                  <td>{museum.address}</td>
+                  <td>{museum.phone}</td>
+                  <td>
+                    <button
+                      onClick={() => handleAddToVisited(museum.address)}
+                      className={styles.actionButton}
+                    >
+                      Add to Visited
+                    </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        )}
       </div>
 
       <Footer />
