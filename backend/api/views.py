@@ -1022,11 +1022,11 @@ def get_all_events(request):
 
         events = [
             {
-                "eid": row[0],
+                "EvId": row[0],
                 "name": row[1],
                 "start_date": row[2],
                 "end_date": row[3],
-                "location": row[4],
+                "address": row[4],
                 "exhibit_name": row[5],
                 "museum_name": row[6],
             }
@@ -1314,17 +1314,30 @@ def get_visitor_event_reviews(request):
 
 @api_view(["GET"])
 def get_event_reviews(request):
-    evid = request.GET.get("evid")
+    evid = request.GET.get("EvId")  # Match param used in frontend
     if not evid:
         return Response({"message": "EvID is required."}, status=400)
 
     try:
         with connection.cursor() as cursor:
             cursor.execute("""
-                SELECT * FROM EVENT_REVIEW WHERE EvID = %s
+                SELECT ER.VEmail, U.Username, ER.Ratings, ER.Review
+                FROM EVENT_REVIEW ER
+                JOIN USER U ON ER.VEmail = U.Email
+                WHERE ER.EvID = %s
             """, [evid])
-            reviews = cursor.fetchall()
-        return Response({"event_reviews": reviews}, status=200)
+            rows = cursor.fetchall()
+
+        reviews = [
+            {
+                "email": row[0],
+                "username": row[1],
+                "rating": row[2],
+                "review_desc": row[3]
+            }
+            for row in rows
+        ]
+        return Response({"reviews": reviews}, status=200)
     except Exception as e:
         return Response({"message": str(e)}, status=500)
 
@@ -1343,6 +1356,9 @@ def add_event_review(request):
             cursor.execute("""
                 INSERT INTO EVENT_REVIEW (VEmail, EvID, Ratings, Review)
                 VALUES (%s, %s, %s, %s)
+                ON DUPLICATE KEY UPDATE
+                    Ratings = VALUES(Ratings),
+                    Review = VALUES(Review)
             """, [email, evid, rating, review_text])
         return Response({"message": "Event review added."}, status=201)
     except Exception as e:
