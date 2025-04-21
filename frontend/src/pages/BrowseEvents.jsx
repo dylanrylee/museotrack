@@ -2,13 +2,23 @@ import React, { useEffect, useState } from "react";
 import Header from "../components/Header";
 import Footer from "../components/Footer";
 import Menu from "../components/Menu";
-import { Link } from "react-router-dom";
 import styles from "../styles/SupervisorHomepage.module.css";
 import api from "../api/client";
+import { FaStar } from "react-icons/fa";
 
 const BrowseEvents = () => {
   const [events, setEvents] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
+  const [modalOpen, setModalOpen] = useState(false);
+  const [viewReviewsModalOpen, setViewReviewsModalOpen] = useState(false);
+  const [selectedEvent, setSelectedEvent] = useState(null);
+  const [rating, setRating] = useState(0);
+  const [hoverRating, setHoverRating] = useState(null);
+  const [reviewDesc, setReviewDesc] = useState("");
+  const [eventReviews, setEventReviews] = useState([]);
+  const [averageRating, setAverageRating] = useState(null);
+
+  const email = localStorage.getItem("email");
 
   const fetchEvents = async () => {
     try {
@@ -23,9 +33,62 @@ const BrowseEvents = () => {
     fetchEvents();
   }, []);
 
+  const handleOpenReviewModal = (event) => {
+    setSelectedEvent(event)
+    setRating(0);
+    setReviewDesc("");
+    setModalOpen(true);
+  };
+
+  const handleViewReviews = async (event) => {
+    try {
+        const res = await api.get("/get-event-reviews/", {
+        params: {EvId: event.EvId }, 
+        });
+        setSelectedEvent(event);
+        setEventReviews(res.data.reviews || []);
+        if (res.data.reviews?.length) {
+          const avg = 
+          (
+            res.data.reviews.reduce((sum, r) => sum + r.rating, 0) /
+            res.data.reviews.length
+          ).toFixed(1);
+          setAverageRating(avg);
+        } 
+        else {
+          setAverageRating(null);
+        }
+        setViewReviewsModalOpen(true);
+      } catch (err) {
+        console.error("Error fetching reviews:", err);
+        alert("Failed to load reviews.");
+      }
+    };
+
+    
+    const handleSubmitReview = async () => {
+      if (!email || !selectedEvent) return;
+      try {
+        await api.post("/submit-evnet-review/", {
+          email,
+          artid: selectedEvent.EvId,
+          rating,
+          review_desc: reviewDesc,
+        });
+        alert("Review submitted!");
+        setModalOpen(false);
+      } catch (err) {
+        console.error("Error submitting review:", err);
+        alert("Failed to submit review.");
+      }
+    };
+
   const filteredEvents = events.filter((event) =>
-    `${event.eid} ${event.name} ${event.exhibit_name} ${event.museum_name}`.toLowerCase().includes(searchTerm.toLowerCase())
+    `${event.EvId} ${event.name} ${event.start_date} ${event.end_date} ${event.address}`
+      .toLowerCase()
+      .includes(searchTerm.toLowerCase())
   );
+
 
   return (
     <>
@@ -54,29 +117,32 @@ const BrowseEvents = () => {
                 <th>Name</th>
                 <th>Start Date</th>
                 <th>End Date</th>
-                <th>Exhibit</th>
-                <th>Museum</th>
-                <th>Location</th>
+                <th>Address</th>
                 <th>Actions</th>
               </tr>
             </thead>
             <tbody>
               {filteredEvents.map((event) => (
-                <tr key={event.eid}>
-                  <td>{event.eid}</td>
+                <tr key={event.EvId}>
                   <td>{event.name}</td>
                   <td>{event.start_date}</td>
                   <td>{event.end_date}</td>
-                  <td>{event.exhibit_name}</td>
-                  <td>{event.museum_name}</td>
-                  <td>{event.location}</td>
+                  <td>{event.address}</td>
                   <td>
-                    <Link to={`/view-event-reviews/${event.eid}`} className={styles.actionButton}>
-                      View Reviews
-                    </Link>
-                    <Link to={`/write-event-review/${event.eid}`} className={styles.actionButton}>
-                      Write Review
-                    </Link>
+                    <div className={styles.actionButtonGroup}>
+                      <button
+                        className={styles.actionButton}
+                        onClick={() => handleOpenReviewModal(event)}
+                      >
+                        Write Review
+                      </button>
+                      <button
+                        className={styles.actionButton}
+                        onClick={() => handleViewReviews(event)}
+                      >
+                        View Reviews
+                      </button>
+                    </div>
                   </td>
                 </tr>
               ))}
@@ -84,6 +150,75 @@ const BrowseEvents = () => {
           </table>
         )}
       </div>
+      {/* Write Review Modal */}
+      {modalOpen && (
+        <div className={styles.modalOverlay}>
+          <div className={styles.modal}>
+            <h3>Review: {selectedEvent.name}</h3>
+            <div className={styles.stars}>
+              {[1, 2, 3, 4, 5].map((star) => (
+                <FaStar
+                  key={star}
+                  size={28}
+                  onClick={() => setRating(star)}
+                  onMouseEnter={() => setHoverRating(star)}
+                  onMouseLeave={() => setHoverRating(null)}
+                  color={(hoverRating || rating) >= star ? "#ffc107" : "#ccc"}
+                  style={{ cursor: "pointer" }}
+                />
+              ))}
+            </div>
+
+            <textarea
+              placeholder="Write your review..."
+              value={reviewDesc}
+              onChange={(e) => setReviewDesc(e.target.value)}
+              className={styles.textarea}
+            />
+
+            <div className={styles.modalActions}>
+              <button onClick={handleSubmitReview} className={styles.actionButton}>
+                Submit
+              </button>
+              <button onClick={() => setModalOpen(false)} className={styles.secondaryButton}>
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* View Reviews Modal */}
+      {viewReviewsModalOpen && (
+        <div className={styles.modalOverlay}>
+          <div className={styles.modal}>
+            <h3>Reviews for: {selectedEvent.name}</h3>
+            {averageRating && (
+              <p><strong>Average Rating:</strong> {averageRating} ⭐</p>
+            )}
+            {eventReviews.length === 0 ? (
+              <p>No reviews yet.</p>
+            ) : (
+              <div className={styles.reviewsList}>
+                {artifactReviews.map((review, index) => (
+                  <div key={index} className={styles.reviewCard}>
+                    <p><strong>Email:</strong> {review.email}</p>
+                    <p><strong>Username:</strong> {review.username}</p>
+                    <p><strong>Rating:</strong> {review.rating} ⭐</p>
+                    <p><strong>Description:</strong> {review.review_desc}</p>
+                  </div>
+                ))}
+              </div>
+            )}
+            <button
+              onClick={() => setViewReviewsModalOpen(false)}
+              className={styles.secondaryButton}
+            >
+              Close
+            </button>
+          </div>
+        </div>
+      )}
 
       <Footer />
     </>
