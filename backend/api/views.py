@@ -1383,3 +1383,21 @@ def add_artifact_review(request):
         return Response({"message": "Artifact review added."}, status=201)
     except Exception as e:
         return Response({"message": str(e)}, status=500)
+    
+@api_view(["POST"])
+def delete_event_review(request):
+    email = request.data.get("email")
+    evid = request.data.get("evid")
+
+    if not email or not evid:
+        return Response({"message": "Missing email or event ID."}, status=400)
+
+    try:
+        with connection.cursor() as cursor:
+            cursor.execute("""
+                DELETE FROM EVENT_REVIEW
+                WHERE VEmail = %s AND EvID = %s
+            """, [email, evid])
+        return Response({"message": "Event review deleted successfully."}, status=200)
+    except Exception as e:
+        return Response({"message": str(e)}, status=500)
