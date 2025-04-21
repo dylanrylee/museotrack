@@ -36,6 +36,24 @@ urlpatterns = [
     path("record-edit-exhibit/", record_edit_exhibit),
     path("get-edit-logs/", get_edit_logs),
 
+    path("get-all-artifacts/", get_all_artifacts),
+    path("get-all-events/", get_all_events),
+    path("get-all-exhibits/", get_all_exhibits),
+    path("get-all-museums/", get_all_museums),
+    path("get-all-visitors/", get_all_visitors),
+    path("get-visited-museums/", get_visited_museums),
+    path("add-visited-museum/", add_visited_museum),
+    path("delete-visited-museum/", delete_visited_museum),
+    path("submit-artifact-review/", submit_artifact_review),
+    path("delete-artifact-review/", delete_artifact_review),
+    path('get-visitor-artifact-reviews/', get_visitor_artifact_reviews),
+    path("get-artifact-reviews/", get_artifact_reviews),
+
+    path('get-visitor-event-reviews/', get_visitor_event_reviews),
+    path('get-event-reviews/', get_event_reviews),
+    path('add-event-review/', add_event_review),
+    path('add-artifact-review/', add_artifact_review),
+
     # JWT auth endpoints
     path('token/', CustomTokenObtainPairView.as_view(), name='token_obtain_pair'),
     path('token/refresh/', CustomTokenObtainPairView.as_view(), name='token_refresh'),

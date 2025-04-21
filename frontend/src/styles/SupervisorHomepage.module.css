@@ -235,7 +235,7 @@ h3 {
 }
 
 .modalBox {
-	background: #fffdf5;
+	background: #f3f3f3;
 	padding: 2rem;
 	border-radius: 14px;
 	width: 100%;
@@ -245,6 +245,10 @@ h3 {
 	box-sizing: border-box;
 	max-height: 95vh;
 	overflow-y: auto;
+}
+
+.modalBox h3 {
+	color: black;
 }
 
 .modalBox h2 {
@@ -325,6 +329,14 @@ h3 {
 	cursor: pointer;
 }
 
+.section {
+	width: 100%;
+	margin-bottom: 2rem;
+	border-radius: 8px;
+	padding: 1rem;
+	box-shadow: 0 0 10px rgba(0,0,0,0.3);
+  }
+
 .saveButton {
 	background-color: #007bff;
 	color: white;
@@ -381,3 +393,126 @@ h3 {
 	background: #f9f9f9;
   }
   
+  .actionButton {
+	background-color: #a07647;
+	color: white;
+	border: none;
+	padding: 8px 14px;
+	font-size: 14px;
+	border-radius: 6px;
+	cursor: pointer;
+	transition: background-color 0.3s ease;
+  }
+
+  .actionButtonGroup {
+	display: flex;
+	gap: 8px;
+	justify-content: center;
+  }
+
+  .actionButton:hover {
+	background-color: #a06767;
+  }
+  
+  .actionButton:disabled {
+	background-color: #ccc;
+	cursor: not-allowed;
+  }
+  
+  .removeButton {
+	background-color: #dc3545;
+	color: white;
+	border: none;
+	padding: 6px 12px;
+	border-radius: 6px;
+	cursor: pointer;
+	font-size: 0.9rem;
+  }
+  
+  .removeButton:hover {
+	background-color: #b02a37;
+  }
+  
+
+  /* Modal background overlay */
+.modalOverlay {
+	position: fixed;
+	top: 0;
+	left: 0;
+	width: 100%;
+	height: 100%;
+	background: rgba(0, 0, 0, 0.7);
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	z-index: 999;
+  }
+  
+  /* Modal box container */
+  .modal {
+	background: #75451d;
+	padding: 2rem;
+	border-radius: 8px;
+	width: 400px;
+	text-align: center;
+	color: white;
+  }
+  
+  /* Star rating container */
+  .stars {
+	margin: 1rem 0;
+  }
+  
+  /* Text area for review input */
+  .textarea {
+	width: 100%;
+	height: 100px;
+	padding: 0.5rem;
+	margin-bottom: 1rem;
+	border-radius: 4px;
+	resize: none;
+	border: 1px solid #555;
+	background-color: #2a2a2a;
+	color: white;
+  }
+  
+  /* Submit + cancel button row */
+  .modalActions {
+	display: flex;
+	justify-content: space-between;
+	gap: 1rem;
+  }
+  
+  /* The "Cancel" button */
+  .secondaryButton {
+	background-color: #666;
+	color: white;
+	border: none;
+	padding: 0.5rem 1rem;
+	border-radius: 4px;
+	cursor: pointer;
+  }
+  .secondaryButton:hover {
+	background-color: #4d4d4d;
+  }
+  
+  .reviewsList {
+	max-height: 300px;
+	overflow-y: auto;
+	text-align: left;
+	margin-top: 1rem;
+  }
+  
+  .reviewCard {
+	background: #2b2b2b;
+	padding: 1rem;
+	margin-bottom: 1rem;
+	border-radius: 6px;
+	border: 1px solid #444;
+  }
+  
+  .reviewCard p {
+	margin: 0.5rem 0;
+	color: white; /* ensures nested <p> also gets white */
+  }
+

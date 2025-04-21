@@ -10,6 +10,10 @@ const ManageArtifacts = () => {
   const [exhibits, setExhibits] = useState([]);
   const [showAddModal, setShowAddModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
+  const [showReviewsModal, setShowReviewsModal] = useState(false);
+  const [selectedArtifact, setSelectedArtifact] = useState(null);
+  const [artifactReviews, setArtifactReviews] = useState([]);
+  const [averageRating, setAverageRating] = useState(null);
   const [editArtifact, setEditArtifact] = useState(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [formData, setFormData] = useState({
@@ -43,6 +47,28 @@ const ManageArtifacts = () => {
       setExhibits(res.data.exhibits);
     } catch (err) {
       console.error("Failed to fetch exhibits:", err);
+    }
+  };
+
+  const fetchArtifactReviews = async (artifact) => {
+    try {
+      const res = await api.get("/get-artifact-reviews/", {
+        params: { artid: artifact.artid },
+      });
+      setSelectedArtifact(artifact);
+      setArtifactReviews(res.data.reviews || []);
+      if (res.data.reviews?.length) {
+        const avg =
+          res.data.reviews.reduce((sum, r) => sum + r.rating, 0) /
+          res.data.reviews.length;
+        setAverageRating(avg.toFixed(1));
+      } else {
+        setAverageRating(null);
+      }
+      setShowReviewsModal(true);
+    } catch (err) {
+      console.error("Error fetching reviews:", err);
+      alert("Failed to load reviews.");
     }
   };
 
@@ -167,7 +193,6 @@ const ManageArtifacts = () => {
                 <th>Exhibit ID</th>
                 <th>Supervisor Email</th>
                 <th>Creators</th>
-                <th>Ratings</th>
                 <th>Actions</th>
               </tr>
             </thead>
@@ -188,31 +213,71 @@ const ManageArtifacts = () => {
                     <td>{artifact.exid}</td>
                     <td>{artifact.semail}</td>
                     <td>
-  {artifact.artists && artifact.artists.length > 0
-    ? artifact.artists
-        .map((a) =>
-          [a.first_name, a.middle_name, a.last_name]
-            .filter(Boolean)
-            .join(" ")
-        )
-        .join(", ")
-    : "None"}
-</td>
-                    <td>{artifact.ratings?.join(", ") || "N/A"}</td>
-                    <td>
-                      <button
-                        className={styles.editButton}
-                        onClick={() => handleOpenEdit(artifact)}
-                      >
-                        ✏️ Edit
-                      </button>
+                      {artifact.artists && artifact.artists.length > 0
+                        ? artifact.artists
+                            .map((a) =>
+                              [a.first_name, a.middle_name, a.last_name]
+                                .filter(Boolean)
+                                .join(" ")
+                            )
+                            .join(", ")
+                        : "None"}
                     </td>
+                    <td>
+  <div className={styles.actionButtonGroup}>
+    <button
+      className={styles.actionButton}
+      onClick={() => handleOpenEdit(artifact)}
+    >
+      ✏️ Edit
+    </button>
+    <button
+      className={styles.actionButton}
+      onClick={() => fetchArtifactReviews(artifact)}
+    >
+      👁 View Reviews
+    </button>
+  </div>
+</td>
+
                   </tr>
                 ))}
             </tbody>
           </table>
         )}
       </div>
+
+      {/* VIEW REVIEWS MODAL */}
+      {showReviewsModal && (
+        <div className={styles.modalBackdrop}>
+          <div className={styles.modalBox}>
+            <h3>Reviews for: {selectedArtifact.name}</h3>
+            {averageRating && (
+              <p style={{ color: "#fffff" }}>Average Rating: {averageRating}</p>
+            )}
+            {artifactReviews.length === 0 ? (
+              <p>No reviews yet.</p>
+            ) : (
+              <div className={styles.reviewsList}>
+                {artifactReviews.map((review, idx) => (
+                  <div key={idx} className={styles.reviewCard}>
+                    <p><strong>Email:</strong> {review.email}</p>
+                    <p><strong>Username:</strong> {review.username}</p>
+                    <p><strong>Rating:</strong> {review.rating}</p>
+                    <p><strong>Description:</strong> {review.review_desc}</p>
+                  </div>
+                ))}
+              </div>
+            )}
+            <button
+              className={styles.cancelButton}
+              onClick={() => setShowReviewsModal(false)}
+            >
+              Close
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* ADD MODAL */}
       {showAddModal && (

@@ -22,6 +22,11 @@ import EditArtifacts from './pages/EditArtifacts';
 import EditEvents from './pages/EditEvents';
 import EditExhibits from './pages/EditExhibits';
 import LogsForEdits from './pages/LogsForEdits';
+import ViewEventReviews from './pages/ViewEventReviews';
+import ViewArtifactReviews from './pages/ViewArtifactReviews';
+import WriteEventReview from './pages/WriteEventReview';
+import WriteArtifactReview from './pages/WriteArtifactReview';
+import EmployeeArtists from './pages/EmployeeArtists';
 
 function App() {
   return (
@@ -48,6 +53,11 @@ function App() {
         <Route path="/edit-events" element={<EditEvents />} />
         <Route path="/edit-exhibits" element={<EditExhibits />} />
         <Route path="/logs-edits" element={<LogsForEdits />} />
+        <Route path="/view-event-reviews" element={<ViewEventReviews />} />
+        <Route path="/view-artifact-reviews" element={<ViewArtifactReviews />} />
+        <Route path="/write-event-review" element={<WriteEventReview />} />
+        <Route path="/write-artifact-review" element={<WriteArtifactReview />} />
+        <Route path="/employee-artists" element={<EmployeeArtists />} />
       </Routes>
     </Router>
   );

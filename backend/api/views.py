@@ -1,6 +1,6 @@
 from django.db import connection
 from django.contrib.auth.hashers import make_password, check_password
-import datetime
+import traceback
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from rest_framework_simplejwt.views import TokenObtainPairView
@@ -982,5 +982,388 @@ def get_edit_logs(request):
 
         return Response({"logs": logs})
 
+    except Exception as e:
+        return Response({"message": str(e)}, status=500)
+
+@api_view(["GET"])
+def get_all_artifacts(request):
+    try:
+        with connection.cursor() as cursor:
+            cursor.execute("SELECT ArtID, Name, Description, Year_Made, Display_Status, ExID FROM ARTIFACT")
+            rows = cursor.fetchall()
+
+        artifacts = [
+            {
+                "artid": row[0],
+                "name": row[1],
+                "description": row[2],
+                "year_made": row[3],
+                "display_status": row[4],
+                "exid": row[5],
+            }
+            for row in rows
+        ]
+        return Response({"artifacts": artifacts})
+    except Exception as e:
+        return Response({"error": str(e)}, status=500)
+    
+@api_view(["GET"])
+def get_all_events(request):
+    try:
+        with connection.cursor() as cursor:
+            cursor.execute("""
+                SELECT E.EvID, E.Name, E.Start_Date, E.End_Date, E.Address, X.Name AS ExhibitName, M.Name AS MuseumName
+                FROM EVENT E
+                JOIN PART_OF P ON E.EvID = P.EvID
+                JOIN EXHIBIT X ON P.ExID = X.ExID
+                JOIN MUSEUM M ON X.Address = M.Address
+            """)
+            rows = cursor.fetchall()
+
+        events = [
+            {
+                "eid": row[0],
+                "name": row[1],
+                "start_date": row[2],
+                "end_date": row[3],
+                "location": row[4],
+                "exhibit_name": row[5],
+                "museum_name": row[6],
+            }
+            for row in rows
+        ]
+        return Response({"events": events})
+    except Exception as e:
+        return Response({"error": str(e)}, status=500)
+
+@api_view(["GET"])
+def get_all_exhibits(request):
+    try:
+        with connection.cursor() as cursor:
+            cursor.execute("""
+                SELECT X.ExID, X.Name, X.Address, M.Name AS MuseumName
+                FROM EXHIBIT X
+                JOIN MUSEUM M ON X.Address = M.Address
+            """)
+            rows = cursor.fetchall()
+
+        exhibits = [
+            {
+                "exid": row[0],
+                "name": row[1],
+                "description": f"Part of {row[3]} at {row[2]}",  # Constructed description
+                "start_date": "N/A",  # Placeholder — you can replace with real dates if you add them
+                "end_date": "N/A"
+            }
+            for row in rows
+        ]
+        return Response({"exhibits": exhibits})
+    except Exception as e:
+        return Response({"error": str(e)}, status=500)
+
+@api_view(["GET"])
+def get_all_museums(request):
+    try:
+        with connection.cursor() as cursor:
+            cursor.execute("SELECT Address, Name FROM MUSEUM")
+            rows = cursor.fetchall()
+
+        museums = [
+            {
+                "address": row[0],
+                "name": row[1],
+                "phone": "N/A"  # Placeholder, update if you add a phone column
+            }
+            for row in rows
+        ]
+        return Response({"museums": museums})
+    except Exception as e:
+        return Response({"error": str(e)}, status=500)
+
+@api_view(["GET"])
+def get_all_visitors(request):
+    try:
+        with connection.cursor() as cursor:
+            # Get visitor user data
+            cursor.execute("""
+                SELECT U.Email, U.First_Name, U.Middle_Name, U.Last_Name, U.Username, U.Year_of_Birth
+                FROM USER U
+                JOIN VISITOR V ON U.Email = V.VEmail
+            """)
+            visitor_rows = cursor.fetchall()
+
+            # Get museum names for each visitor
+            cursor.execute("""
+                SELECT VEmail, M.Name
+                FROM VISITS V
+                JOIN MUSEUM M ON V.Address = M.Address
+            """)
+            visit_rows = cursor.fetchall()
+
+        # Map visitor email to a list of museum names
+        visits_map = {}
+        for vemail, museum_name in visit_rows:
+            visits_map.setdefault(vemail, []).append(museum_name)
+
+        # Build final response
+        visitors = [
+            {
+                "email": row[0],
+                "first_name": row[1],
+                "middle_name": row[2],
+                "last_name": row[3],
+                "username": row[4],
+                "year_of_birth": row[5],
+                "visited_museum_names": visits_map.get(row[0], [])
+            }
+            for row in visitor_rows
+        ]
+        return Response({"visitors": visitors})
+    except Exception as e:
+        return Response({"error": str(e)}, status=500)
+
+@api_view(["GET"])
+def get_visited_museums(request):
+    email = request.GET.get("email")
+    if not email:
+        return Response({"message": "Missing email"}, status=400)
+
+    try:
+        with connection.cursor() as cursor:
+            cursor.execute("SELECT Address FROM VISITS WHERE VEmail = %s", [email])
+            rows = cursor.fetchall()
+
+        visits = [{"address": row[0]} for row in rows]
+        return Response({"visits": visits})
+    except Exception as e:
+        return Response({"message": str(e)}, status=500)
+
+@api_view(["POST"])
+def add_visited_museum(request):
+    visitor_email = request.data.get("visitor_email")
+    museum_address = request.data.get("museum_address")
+
+    if not visitor_email or not museum_address:
+        return Response({"message": "Missing visitor_email or museum_address"}, status=400)
+
+    try:
+        with connection.cursor() as cursor:
+            cursor.execute(
+                "SELECT * FROM VISITS WHERE VEmail = %s AND Address = %s",
+                [visitor_email, museum_address]
+            )
+            if cursor.fetchone():
+                return Response({"message": "Museum already visited by this user."}, status=400)
+
+            cursor.execute(
+                "INSERT INTO VISITS (VEmail, Address) VALUES (%s, %s)",
+                [visitor_email, museum_address]
+            )
+        return Response({"message": "Museum added to visited list successfully!"})
+    except Exception as e:
+        return Response({"message": str(e)}, status=500)
+
+@api_view(["POST"])
+def delete_visited_museum(request):
+    visitor_email = request.data.get("visitor_email")
+    museum_address = request.data.get("museum_address")
+
+    if not visitor_email or not museum_address:
+        return Response({"message": "Missing visitor_email or museum_address"}, status=400)
+
+    try:
+        with connection.cursor() as cursor:
+            cursor.execute(
+                "DELETE FROM VISITS WHERE VEmail = %s AND Address = %s",
+                [visitor_email, museum_address]
+            )
+        return Response({"message": "Museum removed from visited list successfully."})
+    except Exception as e:
+        return Response({"message": str(e)}, status=500)
+
+@api_view(["POST"])
+def submit_artifact_review(request):
+    email = request.data.get("email")
+    artid = request.data.get("artid")
+    rating = request.data.get("rating")
+    review_desc = request.data.get("review_desc")
+
+    if not (email and artid and rating is not None and review_desc is not None):
+        return Response({"message": "Missing required fields."}, status=400)
+
+    try:
+        with connection.cursor() as cursor:
+            cursor.execute("""
+                INSERT INTO REVIEW_ARTIFACT (VEmail, ArtID, Review_Desc, Rating)
+                VALUES (%s, %s, %s, %s)
+                ON DUPLICATE KEY UPDATE
+                    Review_Desc = VALUES(Review_Desc),
+                    Rating = VALUES(Rating)
+            """, [email, artid, review_desc, rating])
+        return Response({"message": "Review saved successfully."})
+    except Exception as e:
+        print("❌ Error submitting artifact review:", e)  # Log to console
+        return Response({"message": str(e)}, status=500)
+
+@api_view(["POST"])
+def delete_artifact_review(request):
+    email = request.data.get("email")
+    artid = request.data.get("artid")
+
+    if not (email and artid):
+        return Response({"message": "Missing email or artid."}, status=400)
+
+    try:
+        with connection.cursor() as cursor:
+            cursor.execute("DELETE FROM REVIEW_ARTIFACT WHERE VEmail = %s AND ArtID = %s", [email, artid])
+        return Response({"message": "Review deleted successfully."})
+    except Exception as e:
+        return Response({"message": str(e)}, status=500)
+
+@api_view(["GET"])
+def get_artifact_reviews(request):
+    artid = request.GET.get("artid")
+    if not artid:
+        return Response({"message": "Missing artifact ID"}, status=400)
+
+    try:
+        with connection.cursor() as cursor:
+            cursor.execute("""
+                SELECT RA.VEmail, U.Username, RA.Rating, RA.Review_Desc
+                FROM REVIEW_ARTIFACT RA
+                JOIN USER U ON RA.VEmail = U.Email
+                WHERE RA.ArtID = %s
+            """, [artid])
+            rows = cursor.fetchall()
+
+        reviews = [
+            {
+                "email": row[0],
+                "username": row[1],
+                "rating": row[2],
+                "review_desc": row[3]
+            }
+            for row in rows
+        ]
+        return Response({"reviews": reviews})
+    except Exception as e:
+        print("❌ ERROR:", e)
+        traceback.print_exc() 
+        return Response({"message": str(e)}, status=500)
+
+
+
+
+
+
+
+@api_view(["GET"])
+def get_visitor_artifact_reviews(request):
+    email = request.GET.get("email")
+    if not email:
+        return Response({"message": "Missing email"}, status=400)
+
+    try:
+        with connection.cursor() as cursor:
+            cursor.execute("""
+                SELECT 
+                    RA.ArtID,
+                    A.Name,
+                    RA.Review_Desc,
+                    RA.Rating
+                FROM REVIEW_ARTIFACT RA
+                JOIN ARTIFACT A ON RA.ArtID = A.ArtID
+                WHERE RA.VEmail = %s
+            """, [email])
+            rows = cursor.fetchall()
+
+        reviews = [
+            {
+                "review_id": f"{email}_{row[0]}",
+                "artifact_name": row[1],
+                "review_text": row[2],
+                "rating": row[3]
+            }
+            for row in rows
+        ]
+
+        return Response({"reviews": reviews})
+    except Exception as e:
+        return Response({"message": str(e)}, status=500)
+
+
+
+
+
+
+@api_view(["GET"])
+def get_visitor_event_reviews(request):
+    email = request.GET.get("email")
+    if not email:
+        return Response({"message": "Email is required."}, status=400)
+    
+    try:
+        with connection.cursor() as cursor:
+            cursor.execute("""
+                SELECT * FROM EVENT_REVIEW WHERE VEmail = %s
+            """, [email])
+            reviews = cursor.fetchall()
+        return Response({"event_reviews": reviews}, status=200)
+    except Exception as e:
+        return Response({"message": str(e)}, status=500)
+
+@api_view(["GET"])
+def get_event_reviews(request):
+    evid = request.GET.get("evid")
+    if not evid:
+        return Response({"message": "EvID is required."}, status=400)
+
+    try:
+        with connection.cursor() as cursor:
+            cursor.execute("""
+                SELECT * FROM EVENT_REVIEW WHERE EvID = %s
+            """, [evid])
+            reviews = cursor.fetchall()
+        return Response({"event_reviews": reviews}, status=200)
+    except Exception as e:
+        return Response({"message": str(e)}, status=500)
+
+@api_view(["POST"])
+def add_event_review(request):
+    email = request.data.get("email")
+    evid = request.data.get("evid")
+    rating = request.data.get("rating")
+    review_text = request.data.get("review")
+
+    if not all([email, evid, rating, review_text]):
+        return Response({"message": "Missing fields."}, status=400)
+
+    try:
+        with connection.cursor() as cursor:
+            cursor.execute("""
+                INSERT INTO EVENT_REVIEW (VEmail, EvID, Ratings, Review)
+                VALUES (%s, %s, %s, %s)
+            """, [email, evid, rating, review_text])
+        return Response({"message": "Event review added."}, status=201)
+    except Exception as e:
+        return Response({"message": str(e)}, status=500)
+
+@api_view(["POST"])
+def add_artifact_review(request):
+    email = request.data.get("email")
+    artid = request.data.get("artid")
+    rating = request.data.get("rating")
+    review_text = request.data.get("review")
+
+    if not all([email, artid, rating, review_text]):
+        return Response({"message": "Missing fields."}, status=400)
+
+    try:
+        with connection.cursor() as cursor:
+            cursor.execute("""
+                INSERT INTO ARTIFACT_REVIEW (VEmail, ArtID, Ratings, Review)
+                VALUES (%s, %s, %s, %s)
+            """, [email, artid, rating, review_text])
+        return Response({"message": "Artifact review added."}, status=201)
     except Exception as e:
         return Response({"message": str(e)}, status=500)

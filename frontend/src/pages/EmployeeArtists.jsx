@@ -1,11 +1,11 @@
 import React, { useEffect, useState } from "react";
 import Header from "../components/Header";
 import Footer from "../components/Footer";
-import Menu from "../components/Menu";
+import EmployeeMenu from "../components/EmployeeMenu";
 import styles from "../styles/SupervisorHomepage.module.css";
 import api from "../api/client";
 
-const BrowseArtists = () => {
+const EmployeeArtists = () => {
   const [artists, setArtists] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
 
@@ -29,7 +29,7 @@ const BrowseArtists = () => {
   return (
     <>
       <Header />
-      <Menu />
+      <EmployeeMenu />
 
       <div className={styles.main}>
         <h2>Artists</h2>
@@ -84,4 +84,4 @@ const BrowseArtists = () => {
   );
 };
 
-export default BrowseArtists;
+export default EmployeeArtists;
