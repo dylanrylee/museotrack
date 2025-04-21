@@ -253,7 +253,7 @@ const ManageArtifacts = () => {
           <div className={styles.modalBox}>
             <h3>Reviews for: {selectedArtifact.name}</h3>
             {averageRating && (
-              <p style={{ color: "#fffff" }}>Average Rating: {averageRating}</p>
+              <p>⭐ Average Rating: {averageRating}</p>
             )}
             {artifactReviews.length === 0 ? (
               <p>No reviews yet.</p>
