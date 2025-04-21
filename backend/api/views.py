@@ -6,8 +6,6 @@ from rest_framework.response import Response
 from rest_framework_simplejwt.views import TokenObtainPairView
 from .token_serializers import CustomTokenObtainPairSerializer
 import random
-from django.http import HttpResponse
-from rest_framework import status
 
 class CustomTokenObtainPairView(TokenObtainPairView):
     serializer_class = CustomTokenObtainPairSerializer
@@ -987,138 +985,124 @@ def get_edit_logs(request):
     except Exception as e:
         return Response({"message": str(e)}, status=500)
 
-@api_view(['POST'])
+@api_view(["POST"])
 def add_visited_museum(request):
+    v_email = request.data.get("email")
+    address = request.data.get("address")
+    
+    if not v_email or not address:
+        return Response({"message": "Missing email or museum address."}, status=400)
+    
     try:
-        email = request.data.get('email')
-        museum_id = request.data.get('museum_id')
-        
         with connection.cursor() as cursor:
             cursor.execute("""
-                INSERT INTO visited_museums (visitor_email, museum_id)
+                INSERT INTO VISITS (VEmail, Address)
                 VALUES (%s, %s)
-            """, [email, museum_id])
-            
-        return Response({'message': 'Museum added to visited list successfully'}, status=status.HTTP_201_CREATED)
+            """, [v_email, address])
+        return Response({"message": "Visited museum added."}, status=201)
     except Exception as e:
-        return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
+        return Response({"message": str(e)}, status=500)
 
-@api_view(['GET'])
+@api_view(["GET"])
 def get_visitor_artifact_reviews(request):
+    email = request.GET.get("email")
+    if not email:
+        return Response({"message": "Email is required."}, status=400)
+    
     try:
-        email = request.GET.get('email')
-        
         with connection.cursor() as cursor:
             cursor.execute("""
-                SELECT ar.artifact_id, a.name as artifact_name, ar.rating, ar.review_text, ar.review_date
-                FROM artifact_reviews ar
-                JOIN artifacts a ON ar.artifact_id = a.artifact_id
-                WHERE ar.visitor_email = %s
-                ORDER BY ar.review_date DESC
+                SELECT * FROM ARTIFACT_REVIEW WHERE VEmail = %s
             """, [email])
-            
-            columns = [col[0] for col in cursor.description]
-            reviews = [dict(zip(columns, row)) for row in cursor.fetchall()]
-            
-        return Response({'reviews': reviews})
+            reviews = cursor.fetchall()
+        return Response({"artifact_reviews": reviews}, status=200)
     except Exception as e:
-        return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
+        return Response({"message": str(e)}, status=500)
 
-@api_view(['GET'])
+@api_view(["GET"])
 def get_visitor_event_reviews(request):
+    email = request.GET.get("email")
+    if not email:
+        return Response({"message": "Email is required."}, status=400)
+    
     try:
-        email = request.GET.get('email')
-        
         with connection.cursor() as cursor:
             cursor.execute("""
-                SELECT er.event_id, e.name as event_name, er.rating, er.review_text, er.review_date
-                FROM event_reviews er
-                JOIN events e ON er.event_id = e.event_id
-                WHERE er.visitor_email = %s
-                ORDER BY er.review_date DESC
+                SELECT * FROM EVENT_REVIEW WHERE VEmail = %s
             """, [email])
-            
-            columns = [col[0] for col in cursor.description]
-            reviews = [dict(zip(columns, row)) for row in cursor.fetchall()]
-            
-        return Response({'reviews': reviews})
+            reviews = cursor.fetchall()
+        return Response({"event_reviews": reviews}, status=200)
     except Exception as e:
-        return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
+        return Response({"message": str(e)}, status=500)
 
-@api_view(['GET'])
+@api_view(["GET"])
 def get_event_reviews(request):
+    evid = request.GET.get("evid")
+    if not evid:
+        return Response({"message": "EvID is required."}, status=400)
+
     try:
-        event_id = request.GET.get('event_id')
-        
         with connection.cursor() as cursor:
             cursor.execute("""
-                SELECT er.visitor_email, v.name as visitor_name, er.rating, er.review_text, er.review_date
-                FROM event_reviews er
-                JOIN visitors v ON er.visitor_email = v.email
-                WHERE er.event_id = %s
-                ORDER BY er.review_date DESC
-            """, [event_id])
-            
-            columns = [col[0] for col in cursor.description]
-            reviews = [dict(zip(columns, row)) for row in cursor.fetchall()]
-            
-        return Response({'reviews': reviews})
+                SELECT * FROM EVENT_REVIEW WHERE EvID = %s
+            """, [evid])
+            reviews = cursor.fetchall()
+        return Response({"event_reviews": reviews}, status=200)
     except Exception as e:
-        return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
+        return Response({"message": str(e)}, status=500)
 
-@api_view(['GET'])
+@api_view(["GET"])
 def get_artifact_reviews(request):
+    artid = request.GET.get("artid")
+    if not artid:
+        return Response({"message": "ArtID is required."}, status=400)
+
     try:
-        artifact_id = request.GET.get('artifact_id')
-        
         with connection.cursor() as cursor:
             cursor.execute("""
-                SELECT ar.visitor_email, v.name as visitor_name, ar.rating, ar.review_text, ar.review_date
-                FROM artifact_reviews ar
-                JOIN visitors v ON ar.visitor_email = v.email
-                WHERE ar.artifact_id = %s
-                ORDER BY ar.review_date DESC
-            """, [artifact_id])
-            
-            columns = [col[0] for col in cursor.description]
-            reviews = [dict(zip(columns, row)) for row in cursor.fetchall()]
-            
-        return Response({'reviews': reviews})
+                SELECT * FROM ARTIFACT_REVIEW WHERE ArtID = %s
+            """, [artid])
+            reviews = cursor.fetchall()
+        return Response({"artifact_reviews": reviews}, status=200)
     except Exception as e:
-        return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
+        return Response({"message": str(e)}, status=500)
 
-@api_view(['POST'])
+@api_view(["POST"])
 def add_event_review(request):
-    try:
-        email = request.data.get('email')
-        event_id = request.data.get('event_id')
-        rating = request.data.get('rating')
-        review_text = request.data.get('review_text')
-        
-        with connection.cursor() as cursor:
-            cursor.execute("""
-                INSERT INTO event_reviews (visitor_email, event_id, rating, review_text, review_date)
-                VALUES (%s, %s, %s, %s, CURRENT_TIMESTAMP)
-            """, [email, event_id, rating, review_text])
-            
-        return Response({'message': 'Event review added successfully'}, status=status.HTTP_201_CREATED)
-    except Exception as e:
-        return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
+    email = request.data.get("email")
+    evid = request.data.get("evid")
+    rating = request.data.get("rating")
+    review_text = request.data.get("review")
 
-@api_view(['POST'])
-def add_artifact_review(request):
+    if not all([email, evid, rating, review_text]):
+        return Response({"message": "Missing fields."}, status=400)
+
     try:
-        email = request.data.get('email')
-        artifact_id = request.data.get('artifact_id')
-        rating = request.data.get('rating')
-        review_text = request.data.get('review_text')
-        
         with connection.cursor() as cursor:
             cursor.execute("""
-                INSERT INTO artifact_reviews (visitor_email, artifact_id, rating, review_text, review_date)
-                VALUES (%s, %s, %s, %s, CURRENT_TIMESTAMP)
-            """, [email, artifact_id, rating, review_text])
-            
-        return Response({'message': 'Artifact review added successfully'}, status=status.HTTP_201_CREATED)
+                INSERT INTO EVENT_REVIEW (VEmail, EvID, Ratings, Review)
+                VALUES (%s, %s, %s, %s)
+            """, [email, evid, rating, review_text])
+        return Response({"message": "Event review added."}, status=201)
     except Exception as e:
-        return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
+        return Response({"message": str(e)}, status=500)
+
+@api_view(["POST"])
+def add_artifact_review(request):
+    email = request.data.get("email")
+    artid = request.data.get("artid")
+    rating = request.data.get("rating")
+    review_text = request.data.get("review")
+
+    if not all([email, artid, rating, review_text]):
+        return Response({"message": "Missing fields."}, status=400)
+
+    try:
+        with connection.cursor() as cursor:
+            cursor.execute("""
+                INSERT INTO ARTIFACT_REVIEW (VEmail, ArtID, Ratings, Review)
+                VALUES (%s, %s, %s, %s)
+            """, [email, artid, rating, review_text])
+        return Response({"message": "Artifact review added."}, status=201)
+    except Exception as e:
+        return Response({"message": str(e)}, status=500)

@@ -2,7 +2,7 @@ Starting the whole application
 
 ```
 frontend: npm start
-backend: python manage.py server
+backend: python manage.py runserver
 MySQL: 
 ```
 
@@ -41,6 +41,7 @@ Current accounts right now:
 visitors:
 	dylan@gmail.com - dylan
 	dylanrylee@gmail.com - dylan
+	khb.hanbal@gmail.com - Keenan
 	
 supervisors:
 ```
