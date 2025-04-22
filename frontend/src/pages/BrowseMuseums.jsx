@@ -5,12 +5,17 @@ import Menu from "../components/Menu";
 import styles from "../styles/SupervisorHomepage.module.css";
 import api from "../api/client";
 
+// page for browsing museums and adding them to visited list
 const BrowseMuseums = () => {
+  // museum data and visited status states
   const [museums, setMuseums] = useState([]);
   const [visitedAddresses, setVisitedAddresses] = useState([]);
+
+  // search and feedback message states
   const [searchTerm, setSearchTerm] = useState("");
   const [message, setMessage] = useState("");
 
+  // fetch all museums from backend
   const fetchMuseums = async () => {
     try {
       const res = await api.get("/get-all-museums/");
@@ -20,6 +25,7 @@ const BrowseMuseums = () => {
     }
   };
 
+  // fetch museums that the user has already visited
   const fetchVisitedMuseums = async () => {
     const email = localStorage.getItem("email");
     try {
@@ -31,11 +37,13 @@ const BrowseMuseums = () => {
     }
   };
 
+  // fetch museums and visited list on initial load
   useEffect(() => {
     fetchMuseums();
     fetchVisitedMuseums();
   }, []);
 
+  // add selected museum to visited list
   const handleAddToVisited = async (museumAddress) => {
     const email = localStorage.getItem("email");
     try {
@@ -52,6 +60,7 @@ const BrowseMuseums = () => {
     }
   };
 
+  // filter museums based on search term
   const filteredMuseums = museums.filter((museum) =>
     `${museum.address} ${museum.name}`.toLowerCase().includes(searchTerm.toLowerCase())
   );
@@ -65,6 +74,7 @@ const BrowseMuseums = () => {
         <h2>Museums</h2>
         <p>Browse through the list of museums and add them to your visited list.</p>
 
+        {/* search bar for filtering museums */}
         <input
           type="text"
           placeholder="Search museums..."
@@ -73,12 +83,14 @@ const BrowseMuseums = () => {
           className={styles.searchInput}
         />
 
+        {/* feedback message on add-to-visited action */}
         {message && (
           <p style={{ color: message.includes("success") ? "green" : "red", marginTop: "1rem" }}>
             {message}
           </p>
         )}
 
+        {/* museums table */}
         {filteredMuseums.length === 0 ? (
           <p style={{ color: "white", marginTop: "1rem" }}>No museums found.</p>
         ) : (
@@ -96,6 +108,7 @@ const BrowseMuseums = () => {
                   <td>{museum.name}</td>
                   <td>{museum.address}</td>
                   <td>
+                    {/* show visited status or add button */}
                     {visitedAddresses.includes(museum.address) ? (
                       <span style={{ color: "green", fontWeight: "bold" }}>
                         ✅ You have visited this museum

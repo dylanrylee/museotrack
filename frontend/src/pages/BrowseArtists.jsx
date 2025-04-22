@@ -5,10 +5,13 @@ import Menu from "../components/Menu";
 import styles from "../styles/SupervisorHomepage.module.css";
 import api from "../api/client";
 
+// Page for browsing artists and viewing associated artifacts
 const BrowseArtists = () => {
+  // artists and search states
   const [artists, setArtists] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
 
+  // fetching all artists on initial load
   const fetchArtists = async () => {
     try {
       const res = await api.get("/get-artists/");
@@ -22,6 +25,7 @@ const BrowseArtists = () => {
     fetchArtists();
   }, []);
 
+  // filter artists based on search terms
   const filteredArtists = artists.filter((artist) =>
     `${artist.aid} ${artist.first_name} ${artist.last_name}`.toLowerCase().includes(searchTerm.toLowerCase())
   );
@@ -35,6 +39,7 @@ const BrowseArtists = () => {
         <h2>Artists</h2>
         <p>Browse through the list of artists and their associated artifacts.</p>
 
+        {/* search bar for filtering artists */}
         <input
           type="text"
           placeholder="Search artists..."
@@ -43,6 +48,7 @@ const BrowseArtists = () => {
           className={styles.searchInput}
         />
 
+        {/* artists table */}
         {filteredArtists.length === 0 ? (
           <p style={{ color: "white", marginTop: "1rem" }}>No artists found.</p>
         ) : (

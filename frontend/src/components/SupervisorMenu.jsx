@@ -2,6 +2,8 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import styles from '../styles/SupervisorHomepage.module.css';
 
+// Sidebar menu for supervisor-related pages
+// Supervisors manage artists/artifacts/events/exhibits, and find logs for edits
 const SupervisorMenu = () => {
   return (
     <div className={styles.menu}>

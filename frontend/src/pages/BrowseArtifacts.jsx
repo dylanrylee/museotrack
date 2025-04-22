@@ -6,20 +6,29 @@ import styles from "../styles/SupervisorHomepage.module.css";
 import api from "../api/client";
 import { FaStar } from "react-icons/fa";
 
+// Page For Browsing, writing reviews, and viewing reviews for Artifacts
 const BrowseArtifacts = () => {
+  // artifacts and search states
   const [artifacts, setArtifacts] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
+
+  // Modal Control and Selected Artifact states
   const [modalOpen, setModalOpen] = useState(false);
   const [viewReviewsModalOpen, setViewReviewsModalOpen] = useState(false);
   const [selectedArtifact, setSelectedArtifact] = useState(null);
+
+  // Review detail states
   const [rating, setRating] = useState(0);
   const [hoverRating, setHoverRating] = useState(null);
   const [reviewDesc, setReviewDesc] = useState("");
+
+  // Displayed Review state
   const [artifactReviews, setArtifactReviews] = useState([]);
   const [averageRating, setAverageRating] = useState(null);
 
   const email = localStorage.getItem("email");
 
+  // fetching all artifacts on intial load
   const fetchArtifacts = async () => {
     try {
       const res = await api.get("/get-all-artifacts/");
@@ -33,6 +42,7 @@ const BrowseArtifacts = () => {
     fetchArtifacts();
   }, []);
 
+  // open modal for writing review
   const handleOpenReviewModal = (artifact) => {
     setSelectedArtifact(artifact);
     setRating(0);
@@ -40,6 +50,7 @@ const BrowseArtifacts = () => {
     setModalOpen(true);
   };
 
+  // fetch and display reviews for artifacts
   const handleViewReviews = async (artifact) => {
     try {
       const res = await api.get("/get-artifact-reviews/", {
@@ -47,6 +58,8 @@ const BrowseArtifacts = () => {
       });
       setSelectedArtifact(artifact);
       setArtifactReviews(res.data.reviews || []);
+
+      // calculate avg rating when reviews exists
       if (res.data.reviews?.length) {
         const avg = (
           res.data.reviews.reduce((sum, r) => sum + r.rating, 0) /
@@ -56,6 +69,7 @@ const BrowseArtifacts = () => {
       } else {
         setAverageRating(null);
       }
+
       setViewReviewsModalOpen(true);
     } catch (err) {
       console.error("Error fetching reviews:", err);
@@ -63,6 +77,7 @@ const BrowseArtifacts = () => {
     }
   };
 
+  // creating a review for selected artifact
   const handleSubmitReview = async () => {
     if (!email || !selectedArtifact) return;
     try {
@@ -80,6 +95,7 @@ const BrowseArtifacts = () => {
     }
   };
 
+  // Filter Artifacts based on seach terms
   const filteredArtifacts = artifacts.filter((artifact) =>
     `${artifact.artid} ${artifact.name} ${artifact.description}`
       .toLowerCase()
@@ -95,6 +111,7 @@ const BrowseArtifacts = () => {
         <h2>Artifacts</h2>
         <p>Browse through the list of artifacts and their details.</p>
 
+        {/* Search bar for filtering artifacts */}
         <input
           type="text"
           placeholder="Search artifacts..."
@@ -103,6 +120,7 @@ const BrowseArtifacts = () => {
           className={styles.searchInput}
         />
 
+        {/* Artifacts table*/}
         {filteredArtifacts.length === 0 ? (
           <p style={{ color: "white", marginTop: "1rem" }}>No artifacts found.</p>
         ) : (

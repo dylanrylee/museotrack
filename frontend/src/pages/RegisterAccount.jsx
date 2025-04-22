@@ -3,7 +3,9 @@ import { Link } from 'react-router-dom';
 import styles from '../styles/RegisterAccount.module.css';
 import api from '../api/client';
 
+// Page for visitors to create a new account
 const RegisterAccount = () => {
+  // state for form input data
   const [formData, setFormData] = useState({
     email: '',
     username: '',
@@ -14,13 +16,16 @@ const RegisterAccount = () => {
     yearOfBirth: ''
   });
   
+  // state for displaying success or error messages
   const [message, setMessage] = useState('');
 
+  // handle changes to form inputs
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
   };
 
+  // submit registration data to API
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
@@ -33,12 +38,16 @@ const RegisterAccount = () => {
   };
 
   return (
+    // Main wrapper for the registration page
     <div className={styles.wrapper}>
       <div className={styles.box}>
+        {/* Page title */}
         <h1 className={styles.title}>Register as a Visitor</h1>
 
+        {/* Success or error message */}
         {message && <p className={styles.message}>{message}</p>}
 
+        {/* Registration form */}
         <form onSubmit={handleSubmit} className={styles.form}>
           <label>Email</label>
           <input name="email" type="email" value={formData.email} onChange={handleChange} required />
@@ -64,6 +73,7 @@ const RegisterAccount = () => {
           <button type="submit" className={styles.registerButton}>Register</button>
         </form>
 
+        {/* Link to login page for existing users */}
         <p className={styles.loginPrompt}>
           Already have an account? <Link to="/">Login</Link>
         </p>

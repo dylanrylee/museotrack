@@ -1,7 +1,7 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import styles from '../styles/SupervisorHomepage.module.css';
-
+// Menu showing Links for editing artifacts/events/exhibits and browsing artists
 const EmployeeMenu = () => {
   return (
     <div className={styles.menu}>

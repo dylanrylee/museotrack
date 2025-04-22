@@ -5,13 +5,17 @@ import SupervisorMenu from "../components/SupervisorMenu";
 import styles from "../styles/SupervisorHomepage.module.css";
 import api from "../api/client";
 
+// Page for supervisors to manage artist records and their artifact associations
 const ManageArtists = () => {
+  // state for data and UI controls
   const [artists, setArtists] = useState([]);
   const [artifacts, setArtifacts] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [showAddModal, setShowAddModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [editArtist, setEditArtist] = useState(null);
+  
+  // form state for both add and edit operations
   const [formData, setFormData] = useState({
     date_of_birth: "",
     first_name: "",
@@ -20,8 +24,10 @@ const ManageArtists = () => {
     selectedArtifacts: []
   });
 
+  // get supervisor email from local storage
   const supervisorEmail = localStorage.getItem("email");
 
+  // fetch all artists from the API
   const fetchArtists = async () => {
     try {
       const res = await api.get("/get-artists/");
@@ -31,6 +37,7 @@ const ManageArtists = () => {
     }
   };
 
+  // fetch artifacts available for assignment to artists
   const fetchArtifacts = async () => {
     try {
       const res = await api.get("/get-artifacts-for-artist/", {
@@ -42,26 +49,31 @@ const ManageArtists = () => {
     }
   };
 
+  // load initial data on component mount
   useEffect(() => {
     fetchArtists();
     fetchArtifacts();
   }, []);
 
+  // handle input changes for text fields
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
+  // handle selection of multiple artifacts
   const handleArtifactSelect = (e) => {
     const options = Array.from(e.target.selectedOptions);
     const selected = options.map((o) => o.value);
     setFormData((prev) => ({ ...prev, selectedArtifacts: selected }));
   };
 
+  // submit new artist to API
   const handleAddArtist = async (e) => {
     e.preventDefault();
     try {
       await api.post("/add-artist/", formData);
+      // reset form and refresh data
       setFormData({
         date_of_birth: "",
         first_name: "",
@@ -76,6 +88,7 @@ const ManageArtists = () => {
     }
   };
 
+  // prepare edit form with artist data
   const handleOpenEdit = (artist) => {
     setEditArtist(artist);
     setFormData({
@@ -89,6 +102,7 @@ const ManageArtists = () => {
     setShowEditModal(true);
   };
 
+  // submit updated artist to API
   const handleUpdateArtist = async (e) => {
     e.preventDefault();
     try {
@@ -100,6 +114,7 @@ const ManageArtists = () => {
     }
   };
 
+  // delete artist from system
   const handleDeleteArtist = async () => {
     try {
       await api.post("/delete-artist/", { aid: editArtist.aid });
@@ -110,6 +125,7 @@ const ManageArtists = () => {
     }
   };
 
+  // filter artists based on search input
   const filteredArtists = artists.filter((artist) =>
     `${artist.aid} ${artist.first_name} ${artist.last_name}`.toLowerCase().includes(searchTerm.toLowerCase())
   );
@@ -119,10 +135,12 @@ const ManageArtists = () => {
       <Header />
       <SupervisorMenu />
 
+      {/* Main content area */}
       <div className={styles.main}>
         <h2>Manage Artists</h2>
         <p>Other museum supervisors can add artists here as well.</p>
 
+        {/* Search and add artist controls */}
         <input
           type="text"
           placeholder="Search artists..."
@@ -147,6 +165,7 @@ const ManageArtists = () => {
           + Add Artist
         </button>
 
+        {/* Artists table or empty state */}
         {filteredArtists.length === 0 ? (
           <p style={{ color: "white", marginTop: "1rem" }}>No artists found.</p>
         ) : (
@@ -193,6 +212,7 @@ const ManageArtists = () => {
         )}
       </div>
 
+      {/* Add Artist Modal */}
       {showAddModal && (
         <div className={styles.modalBackdrop}>
           <div className={styles.modalBox}>
@@ -232,6 +252,7 @@ const ManageArtists = () => {
         </div>
       )}
 
+      {/* Edit Artist Modal */}
       {showEditModal && (
         <div className={styles.modalBackdrop}>
           <div className={styles.modalBox}>

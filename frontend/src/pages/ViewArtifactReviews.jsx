@@ -11,7 +11,7 @@ const ViewArtifactReviews = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedArtifact, setSelectedArtifact] = useState(null);
 
-  // Fetch all artifacts
+  // Fetch all artifacts from API
   const fetchArtifacts = async () => {
     try {
       const res = await api.get("/get-artifacts/");
@@ -21,6 +21,7 @@ const ViewArtifactReviews = () => {
     }
   };
 
+  // Fetch reviews for a selected artifact
   const fetchReviews = async (artifactId) => {
     try {
       const res = await api.get("/get-artifact-reviews/", {
@@ -32,16 +33,19 @@ const ViewArtifactReviews = () => {
     }
   };
 
+  // Load artifacts on page load
   useEffect(() => {
     fetchArtifacts();
   }, []);
 
+  // Load reviews when an artifact is selected
   useEffect(() => {
     if (selectedArtifact) {
       fetchReviews(selectedArtifact);
     }
   }, [selectedArtifact]);
 
+  // Filter reviews based on search term
   const filteredReviews = reviews.filter((review) =>
     `${review.review_text} ${review.rating}`.toLowerCase().includes(searchTerm.toLowerCase())
   );
@@ -55,6 +59,7 @@ const ViewArtifactReviews = () => {
         <h2>Artifact Reviews</h2>
         <p>View reviews for specific artifacts.</p>
 
+        {/* Artifact selector */}
         <select
           value={selectedArtifact || ""}
           onChange={(e) => setSelectedArtifact(e.target.value)}
@@ -68,6 +73,7 @@ const ViewArtifactReviews = () => {
           ))}
         </select>
 
+        {/* Search bar for filtering reviews */}
         <input
           type="text"
           placeholder="Search reviews..."
@@ -76,6 +82,7 @@ const ViewArtifactReviews = () => {
           className={styles.searchInput}
         />
 
+        {/* Display filtered reviews */}
         {filteredReviews.length === 0 ? (
           <p style={{ color: "white", marginTop: "1rem" }}>No reviews found.</p>
         ) : (
@@ -107,4 +114,4 @@ const ViewArtifactReviews = () => {
   );
 };
 
-export default ViewArtifactReviews; 
+export default ViewArtifactReviews;

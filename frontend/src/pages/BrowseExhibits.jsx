@@ -5,10 +5,13 @@ import Menu from "../components/Menu";
 import styles from "../styles/SupervisorHomepage.module.css";
 import api from "../api/client";
 
+// Page for browsing through all exhibits
 const BrowseExhibits = () => {
+  // exhibit and search term states
   const [exhibits, setExhibits] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
 
+  // fetching all exhibits on initial load
   const fetchExhibits = async () => {
     try {
       const res = await api.get("/get-all-exhibits/");
@@ -22,6 +25,7 @@ const BrowseExhibits = () => {
     fetchExhibits();
   }, []);
 
+  // filter exhibits based on search term
   const filteredExhibits = exhibits.filter((exhibit) =>
     `${exhibit.exid} ${exhibit.name} ${exhibit.description}`.toLowerCase().includes(searchTerm.toLowerCase())
   );
@@ -35,6 +39,7 @@ const BrowseExhibits = () => {
         <h2>Exhibits</h2>
         <p>Browse through the list of exhibits and their details.</p>
 
+        {/* search bar for filtering exhibits */}
         <input
           type="text"
           placeholder="Search exhibits..."
@@ -43,6 +48,7 @@ const BrowseExhibits = () => {
           className={styles.searchInput}
         />
 
+        {/* exhibits table */}
         {filteredExhibits.length === 0 ? (
           <p style={{ color: "white", marginTop: "1rem" }}>No exhibits found.</p>
         ) : (

@@ -6,7 +6,9 @@ import Footer from '../components/Footer';
 import Menu from '../components/Menu';
 import api from '../api/client';
 
+// Visitor homepage showing personalized info and reviews
 const VisitorHomepage = () => {
+  // State variables to manage visitor data
   const [username, setUsername] = useState('');
   const [museums, setMuseums] = useState(null);
   const [artifactReviews, setArtifactReviews] = useState(null);
@@ -15,6 +17,7 @@ const VisitorHomepage = () => {
   const navigate = useNavigate();
   const email = localStorage.getItem('email');
 
+  // Effect hook to fetch visitor information when email is available
   useEffect(() => {
     if (!email) {
       setError('Email not provided.');
@@ -22,6 +25,7 @@ const VisitorHomepage = () => {
     }
 
     const fetchVisitorInfo = async () => {
+      // Fetching museums the visitor has visited
       try {
         const museumsRes = await api.get('/browse-visited-museums/', { params: { email } });
         setUsername(museumsRes.data.username || '');
@@ -31,6 +35,7 @@ const VisitorHomepage = () => {
         setMuseums(null);
       }
 
+      // Fetching artifact reviews by the visitor
       try {
         const artifactReviewsRes = await api.get('/get-visitor-artifact-reviews/', { params: { email } });
         setArtifactReviews(artifactReviewsRes.data.reviews || []);
@@ -39,6 +44,7 @@ const VisitorHomepage = () => {
         setArtifactReviews(null);
       }
 
+      // Fetching event reviews by the visitor
       try {
         const eventReviewsRes = await api.get('/get-visitor-event-reviews/', { params: { email } });
         setEventReviews(eventReviewsRes.data.reviews || []);
@@ -51,11 +57,13 @@ const VisitorHomepage = () => {
     fetchVisitorInfo();
   }, [email]);
 
+  // Handle logout and clear local storage
   const handleLogout = () => {
     localStorage.clear();
     navigate('/');
   };
 
+  // Handle removal of a visited museum
   const handleRemoveVisit = async (address) => {
     try {
       await api.post('/delete-visited-museum/', {
@@ -69,6 +77,7 @@ const VisitorHomepage = () => {
     }
   };
 
+  // Handle deletion of an artifact review
   const handleDeleteArtifactReview = async (reviewId) => {
     const artid = reviewId.split("_")[1];
     try {
@@ -82,7 +91,6 @@ const VisitorHomepage = () => {
       alert("Could not delete review.");
     }
   };
-  
 
   return (
     <>
@@ -102,7 +110,7 @@ const VisitorHomepage = () => {
               </button>
             </div>
 
-            {/* Museums */}
+            {/* Museums section */}
             <div className={styles.section}>
               <h2>Museums You've Visited</h2>
               {museums === null ? (
@@ -138,47 +146,45 @@ const VisitorHomepage = () => {
               )}
             </div>
 
-{/* Artifact Reviews */}
-<div className={styles.section}>
-  <h2>Your Artifact Reviews</h2>
-  {artifactReviews === null ? (
-    <p>N/A</p>
-  ) : artifactReviews.length === 0 ? (
-    <p>None</p>
-  ) : (
-    <table className={styles.table}>
-      <thead>
-        <tr>
-          <th>Artifact</th>
-          <th>Rating</th>
-          <th>Review</th>
-          <th>Actions</th>
-        </tr>
-      </thead>
-      <tbody>
-        {artifactReviews.map((review) => (
-          <tr key={review.review_id}>
-            <td>{review.artifact_name}</td>
-            <td>{review.rating}</td>
-            <td>{review.review_text}</td>
-            <td>
-              <button
-                onClick={() => handleDeleteArtifactReview(review.review_id)}
-                className={styles.removeButton}
-              >
-                Delete
-              </button>
-            </td>
-          </tr>
-        ))}
-      </tbody>
-    </table>
-  )}
-</div>
+            {/* Artifact Reviews section */}
+            <div className={styles.section}>
+              <h2>Your Artifact Reviews</h2>
+              {artifactReviews === null ? (
+                <p>N/A</p>
+              ) : artifactReviews.length === 0 ? (
+                <p>None</p>
+              ) : (
+                <table className={styles.table}>
+                  <thead>
+                    <tr>
+                      <th>Artifact</th>
+                      <th>Rating</th>
+                      <th>Review</th>
+                      <th>Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {artifactReviews.map((review) => (
+                      <tr key={review.review_id}>
+                        <td>{review.artifact_name}</td>
+                        <td>{review.rating}</td>
+                        <td>{review.review_text}</td>
+                        <td>
+                          <button
+                            onClick={() => handleDeleteArtifactReview(review.review_id)}
+                            className={styles.removeButton}
+                          >
+                            Delete
+                          </button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              )}
+            </div>
 
-
-
-            {/* Event Reviews */}
+            {/* Event Reviews section */}
             <div className={styles.section}>
               <h2>Your Event Reviews</h2>
               {eventReviews === null ? (

@@ -4,11 +4,13 @@ import styles from '../styles/LoginPage.module.css';
 import api from '../api/client';
 
 const SupervisorLogin = () => {
+  // State for email, password, and error message
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const navigate = useNavigate();
 
+  // Handles login form submission
   const handleLogin = async (e) => {
     e.preventDefault();
 
@@ -16,10 +18,11 @@ const SupervisorLogin = () => {
       const res = await api.post('/login-supervisor-employee/', { email, password });
       const { role } = res.data;
 
+      // Save login info to localStorage
       localStorage.setItem('email', email);
       localStorage.setItem('isLoggedIn', 'true');
 
-      // ✅ Ensure localStorage writes before navigation
+      // Navigate based on role after ensuring localStorage is updated
       setTimeout(() => {
         if (role === 'supervisor') {
           navigate('/supervisor-homepage');
@@ -30,6 +33,7 @@ const SupervisorLogin = () => {
         }
       }, 200);
     } catch (err) {
+      // Show error if login fails
       const msg = err.response?.data?.message || 'Login failed';
       setError(msg);
     }
@@ -40,8 +44,10 @@ const SupervisorLogin = () => {
       <div className={styles.loginBox}>
         <h1 className={styles.title}>MuseoTrack - Staff Login</h1>
 
+        {/* Display error message if any */}
         {error && <p className={styles.errorMessage}>{error}</p>}
 
+        {/* Login Form */}
         <form className={styles.form} onSubmit={handleLogin}>
           <label htmlFor="email">Email</label>
           <input
@@ -66,6 +72,7 @@ const SupervisorLogin = () => {
           <button type="submit" className={styles.signInButton}>Sign In</button>
         </form>
 
+        {/* Navigation Links */}
         <p className={styles.registerPrompt}>
           Not a museum employee? <Link to="/">Login as Visitor</Link>
         </p>

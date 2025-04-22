@@ -6,15 +6,18 @@ import Footer from "../components/Footer";
 import EmployeeMenu from "../components/EmployeeMenu";
 import api from "../api/client";
 
+// Employee dashboard showing personal info and colleagues under same supervisor
 const EmployeeHomepage = () => {
+  // state for user data and UI
   const [username, setUsername] = useState("");
   const [museum, setMuseum] = useState("");
   const [museumAddress, setMuseumAddress] = useState("");
   const [supervisorEmail, setSupervisorEmail] = useState("");
   const [employees, setEmployees] = useState([]);
   const [error, setError] = useState("");
+  
+  // navigation and authentication
   const navigate = useNavigate();
-
   const email = localStorage.getItem("email");
 
   // Step 1: Fetch current employee info
@@ -30,11 +33,13 @@ const EmployeeHomepage = () => {
           params: { email },
         });
 
+        // Update employee personal info
         setUsername(res.data.username);
         setMuseum(res.data.museumName);
         setMuseumAddress(res.data.museumAddress);
         setSupervisorEmail(res.data.supervisorEmail);
 
+        // Store museum address for future use
         localStorage.setItem("museumAddress", res.data.museumAddress);
       } catch (err) {
         console.error("Error loading employee info:", err);
@@ -66,10 +71,10 @@ const EmployeeHomepage = () => {
       }
     };
 
-    console.log("Fetching employees using supervisorEmail:", supervisorEmail);
     fetchEmployees();
   }, [supervisorEmail]);
 
+  // handle user logout action
   const handleLogout = () => {
     localStorage.clear();
     navigate("/");
@@ -80,11 +85,14 @@ const EmployeeHomepage = () => {
       <Header />
       <EmployeeMenu />
 
+      {/* Main content area */}
       <div className={styles.main}>
+        {/* Error display or content */}
         {error ? (
           <p style={{ color: "red" }}>{error}</p>
         ) : (
           <div>
+            {/* Personal info section */}
             <p>
               Welcome, <strong>{username}</strong>
             </p>
@@ -101,14 +109,17 @@ const EmployeeHomepage = () => {
               Supervisor: <strong>{supervisorEmail}</strong>
             </p>
 
+            {/* Logout button */}
             <button onClick={handleLogout} className={styles.signOutButton}>
               Logout
             </button>
 
+            {/* Colleagues list section */}
             <h2 style={{ textAlign: "left" }}>
               Other Employees Under Your Supervisor:
             </h2>
 
+            {/* Employees table or empty state */}
             {employees.length > 0 ? (
               <table className={styles.table}>
                 <thead>

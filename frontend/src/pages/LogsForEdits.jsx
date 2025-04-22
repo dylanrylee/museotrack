@@ -5,17 +5,25 @@ import SupervisorMenu from "../components/SupervisorMenu";
 import styles from "../styles/SupervisorHomepage.module.css";
 import api from "../api/client";
 
+// Page displaying audit logs of all edits made by employees under supervisor
 const LogsForEdits = () => {
+  // state for logs data and error handling
   const [logs, setLogs] = useState([]);
   const [error, setError] = useState("");
 
+  // fetch edit logs on component mount
   useEffect(() => {
     const fetchLogs = async () => {
       try {
+        // get supervisor email from local storage
         const email = localStorage.getItem("email");
+        
+        // fetch logs from API
         const res = await api.get("/get-edit-logs/", {
           params: { email },
         });
+        
+        // update state with fetched logs
         setLogs(res.data.logs);
       } catch (err) {
         console.error("Failed to fetch logs:", err);
@@ -30,9 +38,12 @@ const LogsForEdits = () => {
     <>
       <Header />
       <SupervisorMenu />
+      
+      {/* Main content container */}
       <div className={styles.main}>
         <h2>Edit Logs</h2>
 
+        {/* Conditional rendering: error, empty state, or logs table */}
         {error ? (
           <p style={{ color: "red" }}>{error}</p>
         ) : logs.length === 0 ? (
@@ -50,6 +61,7 @@ const LogsForEdits = () => {
               </tr>
             </thead>
             <tbody>
+              {/* Map through logs to display each record */}
               {logs.map((log) => (
                 <tr key={`${log.type}-${log.edit_id}`}>
                   <td>{log.edit_id}</td>
@@ -64,6 +76,7 @@ const LogsForEdits = () => {
           </table>
         )}
       </div>
+      
       <Footer />
     </>
   );

@@ -2,6 +2,7 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import styles from '../styles/Pages.module.css';
 
+// Menu For visitors, allows visitor to select what to browse
 const Menu = () => {
   return (
     <div className={styles.menu}>

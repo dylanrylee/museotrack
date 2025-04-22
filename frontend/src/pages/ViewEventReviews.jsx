@@ -11,7 +11,7 @@ const ViewEventReviews = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedEvent, setSelectedEvent] = useState(null);
 
-  // Fetch all events
+  // Fetch all events from API
   const fetchEvents = async () => {
     try {
       const res = await api.get("/get-events/");
@@ -21,6 +21,7 @@ const ViewEventReviews = () => {
     }
   };
 
+  // Fetch reviews for a selected event
   const fetchReviews = async (eventId) => {
     try {
       const res = await api.get("/get-event-reviews/", {
@@ -32,16 +33,19 @@ const ViewEventReviews = () => {
     }
   };
 
+  // Load events on page load
   useEffect(() => {
     fetchEvents();
   }, []);
 
+  // Load reviews when an event is selected
   useEffect(() => {
     if (selectedEvent) {
       fetchReviews(selectedEvent);
     }
   }, [selectedEvent]);
 
+  // Filter reviews based on search term
   const filteredReviews = reviews.filter((review) =>
     `${review.review_text} ${review.rating}`.toLowerCase().includes(searchTerm.toLowerCase())
   );
@@ -55,6 +59,7 @@ const ViewEventReviews = () => {
         <h2>Event Reviews</h2>
         <p>View reviews for specific events.</p>
 
+        {/* Event selector */}
         <select
           value={selectedEvent || ""}
           onChange={(e) => setSelectedEvent(e.target.value)}
@@ -68,6 +73,7 @@ const ViewEventReviews = () => {
           ))}
         </select>
 
+        {/* Search bar for filtering reviews */}
         <input
           type="text"
           placeholder="Search reviews..."
@@ -76,6 +82,7 @@ const ViewEventReviews = () => {
           className={styles.searchInput}
         />
 
+        {/* Display filtered reviews */}
         {filteredReviews.length === 0 ? (
           <p style={{ color: "white", marginTop: "1rem" }}>No reviews found.</p>
         ) : (
@@ -107,4 +114,4 @@ const ViewEventReviews = () => {
   );
 };
 
-export default ViewEventReviews; 
+export default ViewEventReviews;

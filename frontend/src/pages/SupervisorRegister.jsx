@@ -18,11 +18,13 @@ const SupervisorRegister = () => {
   const [message, setMessage] = useState('');
   const navigate = useNavigate();
 
+  // Handle form field changes
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
   };
 
+  // Handle form submission
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
@@ -40,8 +42,10 @@ const SupervisorRegister = () => {
       <div className={styles.box}>
         <h1 className={styles.title}>Register as a Supervisor</h1>
 
+        {/* Display success or error message */}
         {message && <p className={styles.message}>{message}</p>}
 
+        {/* Registration Form */}
         <form onSubmit={handleSubmit} className={styles.form}>
           <label>Email</label>
           <input name="email" type="email" value={formData.email} onChange={handleChange} required />
@@ -73,6 +77,7 @@ const SupervisorRegister = () => {
           <button type="submit" className={styles.registerButton}>Register</button>
         </form>
 
+        {/* Link to supervisor login page */}
         <p className={styles.registerPrompt}>
           Already have a supervisor account? <Link to="/supervisor-login">Login here</Link>
         </p>

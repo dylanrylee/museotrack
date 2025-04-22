@@ -5,16 +5,26 @@ import SupervisorMenu from "../components/SupervisorMenu";
 import styles from "../styles/SupervisorHomepage.module.css";
 import api from "../api/client";
 
+// Page for supervisors to manage museum exhibits (CRUD operations)
 const ManageExhibits = () => {
+  // state for exhibits data and UI controls
   const [exhibits, setExhibits] = useState([]);
   const [showModal, setShowModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
+  
+  // form state for adding new exhibits
   const [formData, setFormData] = useState({ name: "" });
+  
+  // form state for editing existing exhibits
   const [editData, setEditData] = useState({ exid: "", newName: "" });
+  
+  // state for search functionality
   const [searchTerm, setSearchTerm] = useState("");
 
+  // get museum address from local storage
   const supervisorMuseumAddress = localStorage.getItem("museumAddress");
 
+  // fetch all exhibits for the supervisor's museum
   const fetchExhibits = async () => {
     try {
       const res = await api.get("/get-exhibits/", {
@@ -26,20 +36,24 @@ const ManageExhibits = () => {
     }
   };
 
+  // load exhibits on component mount
   useEffect(() => {
     fetchExhibits();
   }, []);
 
+  // handle input changes for add exhibit form
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
+  // handle input changes for edit exhibit form
   const handleEditChange = (e) => {
     const { name, value } = e.target;
     setEditData((prev) => ({ ...prev, [name]: value }));
   };
 
+  // submit new exhibit to API
   const handleAddExhibit = async (e) => {
     e.preventDefault();
     try {
@@ -56,11 +70,13 @@ const ManageExhibits = () => {
     }
   };
 
+  // prepare edit form with exhibit data
   const handleOpenEdit = (exhibit) => {
     setEditData({ exid: exhibit.exid, newName: exhibit.name });
     setShowEditModal(true);
   };
 
+  // submit updated exhibit to API
   const handleUpdateExhibit = async (e) => {
     e.preventDefault();
     try {
@@ -75,6 +91,7 @@ const ManageExhibits = () => {
     }
   };
 
+  // delete exhibit from system
   const handleDeleteExhibit = async () => {
     try {
       await api.post("/delete-exhibit/", { exid: editData.exid });
@@ -85,6 +102,7 @@ const ManageExhibits = () => {
     }
   };
 
+  // filter exhibits based on search input (ID or name)
   const filteredExhibits = exhibits.filter((ex) =>
     `${ex.exid} ${ex.name}`.toLowerCase().includes(searchTerm.toLowerCase())
   );
@@ -93,9 +111,12 @@ const ManageExhibits = () => {
     <>
       <Header />
       <SupervisorMenu />
+      
+      {/* Main content container */}
       <div className={styles.main}>
         <h2>Manage Exhibits</h2>
 
+        {/* Search input for filtering exhibits */}
         <input
           type="text"
           placeholder="Search exhibits..."
@@ -104,6 +125,7 @@ const ManageExhibits = () => {
           className={styles.searchInput}
         />
 
+        {/* Button to open add exhibit modal */}
         <button
           onClick={() => {
             setFormData({ name: "" });
@@ -114,6 +136,7 @@ const ManageExhibits = () => {
           + Add Exhibit
         </button>
 
+        {/* Exhibits table or empty state message */}
         {filteredExhibits.length > 0 ? (
           <table className={styles.table}>
             <thead>
@@ -145,7 +168,7 @@ const ManageExhibits = () => {
         )}
       </div>
 
-      {/* Add Modal */}
+      {/* Add Exhibit Modal */}
       {showModal && (
         <div className={styles.modalBackdrop}>
           <div className={styles.modalBox}>
@@ -177,7 +200,7 @@ const ManageExhibits = () => {
         </div>
       )}
 
-      {/* Edit Modal */}
+      {/* Edit Exhibit Modal */}
       {showEditModal && (
         <div className={styles.modalBackdrop}>
           <div className={styles.modalBox}>

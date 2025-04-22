@@ -5,10 +5,13 @@ import EmployeeMenu from "../components/EmployeeMenu";
 import styles from "../styles/SupervisorHomepage.module.css";
 import api from "../api/client";
 
+// Page for employees to browse and search through artist records
 const EmployeeArtists = () => {
+  // state for artists list and search functionality
   const [artists, setArtists] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
 
+  // fetch all artists from the API
   const fetchArtists = async () => {
     try {
       const res = await api.get("/get-artists/");
@@ -18,12 +21,16 @@ const EmployeeArtists = () => {
     }
   };
 
+  // load artists on component mount
   useEffect(() => {
     fetchArtists();
   }, []);
 
+  // filter artists based on search input
   const filteredArtists = artists.filter((artist) =>
-    `${artist.aid} ${artist.first_name} ${artist.last_name}`.toLowerCase().includes(searchTerm.toLowerCase())
+    `${artist.aid} ${artist.first_name} ${artist.last_name}`
+      .toLowerCase()
+      .includes(searchTerm.toLowerCase())
   );
 
   return (
@@ -31,10 +38,12 @@ const EmployeeArtists = () => {
       <Header />
       <EmployeeMenu />
 
+      {/* Main content container */}
       <div className={styles.main}>
         <h2>Artists</h2>
         <p>Browse through the list of artists and their associated artifacts.</p>
 
+        {/* Search input for filtering artists */}
         <input
           type="text"
           placeholder="Search artists..."
@@ -43,6 +52,7 @@ const EmployeeArtists = () => {
           className={styles.searchInput}
         />
 
+        {/* Conditional render: empty state or artists table */}
         {filteredArtists.length === 0 ? (
           <p style={{ color: "white", marginTop: "1rem" }}>No artists found.</p>
         ) : (

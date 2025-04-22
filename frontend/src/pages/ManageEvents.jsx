@@ -5,7 +5,9 @@ import SupervisorMenu from "../components/SupervisorMenu";
 import styles from "../styles/SupervisorHomepage.module.css";
 import api from "../api/client";
 
+// Page for supervisors to manage museum events and their exhibit associations
 const ManageEvents = () => {
+  // state for events data and UI controls
   const [events, setEvents] = useState([]);
   const [exhibitOptions, setExhibitOptions] = useState([]);
   const [showModal, setShowModal] = useState(false);
@@ -14,9 +16,11 @@ const ManageEvents = () => {
   const [formData, setFormData] = useState({ evid: "", name: "", start_date: "", end_date: "", exid: "" });
   const [editData, setEditData] = useState({ evid: "", name: "", start_date: "", end_date: "", exid: "" });
 
+  // get museum address from local storage
   const supervisorMuseumAddress = localStorage.getItem("museumAddress");
   const today = new Date().toISOString().split("T")[0]; // YYYY-MM-DD
 
+  // fetch all events for the supervisor's museum
   const fetchEvents = async () => {
     try {
       const res = await api.get("/get-events/", {
@@ -28,6 +32,7 @@ const ManageEvents = () => {
     }
   };
 
+  // fetch available exhibits for event association
   const fetchExhibits = async () => {
     try {
       const res = await api.get("/get-exhibits/", {
@@ -39,21 +44,25 @@ const ManageEvents = () => {
     }
   };
 
+  // load initial data on component mount
   useEffect(() => {
     fetchEvents();
     fetchExhibits();
   }, []);
 
+  // handle input changes for add event form
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
+  // handle input changes for edit event form
   const handleEditChange = (e) => {
     const { name, value } = e.target;
     setEditData((prev) => ({ ...prev, [name]: value }));
   };
 
+  // submit new event to API
   const handleAddEvent = async (e) => {
     e.preventDefault();
     try {
@@ -75,13 +84,14 @@ const ManageEvents = () => {
       alert("Failed to add event: " + msg);
     }
   };
-  
 
+  // prepare edit form with event data
   const handleOpenEdit = (event) => {
     setEditData({ ...event });
     setShowEditModal(true);
   };
 
+  // submit updated event to API
   const handleUpdateEvent = async (e) => {
     e.preventDefault();
     try {
@@ -93,6 +103,7 @@ const ManageEvents = () => {
     }
   };
 
+  // delete event from system
   const handleDeleteEvent = async () => {
     try {
       await api.post("/delete-event/", { evid: editData.evid });
@@ -103,6 +114,7 @@ const ManageEvents = () => {
     }
   };
 
+  // filter events based on search input across all fields
   const filteredEvents = events.filter((ev) =>
     Object.values(ev).some((val) =>
       String(val).toLowerCase().includes(searchTerm.toLowerCase())
@@ -113,9 +125,12 @@ const ManageEvents = () => {
     <>
       <Header />
       <SupervisorMenu />
+      
+      {/* Main content container */}
       <div className={styles.main}>
         <h2>Manage Events</h2>
 
+        {/* Search input for filtering events */}
         <input
           type="text"
           placeholder="Search..."
@@ -124,6 +139,7 @@ const ManageEvents = () => {
           className={styles.searchInput}
         />
 
+        {/* Button to open add event modal */}
         <button
           onClick={() => {
             setShowModal(true);
@@ -134,6 +150,7 @@ const ManageEvents = () => {
           + Add Event
         </button>
 
+        {/* Events table or empty state message */}
         {filteredEvents.length > 0 ? (
           <table className={styles.table}>
             <thead>
@@ -171,6 +188,7 @@ const ManageEvents = () => {
         )}
       </div>
 
+      {/* Add Event Modal */}
       {showModal && (
         <div className={styles.modalBackdrop}>
           <div className={styles.modalBox}>
@@ -204,6 +222,7 @@ const ManageEvents = () => {
         </div>
       )}
 
+      {/* Edit Event Modal */}
       {showEditModal && (
         <div className={styles.modalBackdrop}>
           <div className={styles.modalBox}>

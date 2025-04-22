@@ -6,17 +6,22 @@ import styles from "../styles/SupervisorHomepage.module.css";
 import api from "../api/client";
 
 const EditEvents = () => {
+  // Event and exhibit states
   const [events, setEvents] = useState([]);
   const [exhibitOptions, setExhibitOptions] = useState([]);
+
+  // States for Editing
   const [showEditModal, setShowEditModal] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [editData, setEditData] = useState({ evid: "", name: "", start_date: "", end_date: "", exid: "" });
 
+  // States for museum, email, and current date
   const [museumAddress, setMuseumAddress] = useState("");
   const email = localStorage.getItem("email");
   const today = new Date().toISOString().split("T")[0]; // YYYY-MM-DD
 
   useEffect(() => {
+    // fetching event dependency for editing
     const fetchEventDependencies = async () => {
       try {
         // Step 1: Get employee info
@@ -46,6 +51,7 @@ const EditEvents = () => {
     fetchEventDependencies();
   }, [email]);
 
+  // fetching events for initial load
   const fetchEvents = async (address) => {
     try {
       const res = await api.get("/get-events/", {
@@ -57,6 +63,7 @@ const EditEvents = () => {
     }
   };
 
+  // fetching exhibits for initial load
   const fetchExhibits = async (address) => {
     try {
       const res = await api.get("/get-exhibits/", {

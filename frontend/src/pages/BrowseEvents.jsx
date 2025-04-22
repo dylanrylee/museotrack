@@ -6,7 +6,9 @@ import styles from "../styles/SupervisorHomepage.module.css";
 import api from "../api/client";
 import { FaStar } from "react-icons/fa";
 
+// Page for browsing events, submitting reviews, and viewing existing feedback
 const BrowseEvents = () => {
+  // state setup
   const [events, setEvents] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [modalOpen, setModalOpen] = useState(false);
@@ -20,6 +22,7 @@ const BrowseEvents = () => {
 
   const email = localStorage.getItem("email");
 
+  // fetch all events
   const fetchEvents = async () => {
     try {
       const res = await api.get("/get-all-events/");
@@ -33,62 +36,62 @@ const BrowseEvents = () => {
     fetchEvents();
   }, []);
 
+  // open modal to write a review for an event
   const handleOpenReviewModal = (event) => {
-    setSelectedEvent(event)
+    setSelectedEvent(event);
     setRating(0);
     setReviewDesc("");
     setModalOpen(true);
   };
 
+  // fetch reviews for a specific event
   const handleViewReviews = async (event) => {
     try {
-        const res = await api.get("/get-event-reviews/", {
-        params: {EvId: event.EvId }, 
-        });
-        setSelectedEvent(event);
-        setEventReviews(res.data.reviews || []);
-        if (res.data.reviews?.length) {
-          const avg = 
-          (
-            res.data.reviews.reduce((sum, r) => sum + r.rating, 0) /
-            res.data.reviews.length
-          ).toFixed(1);
-          setAverageRating(avg);
-        } 
-        else {
-          setAverageRating(null);
-        }
-        setViewReviewsModalOpen(true);
-      } catch (err) {
-        console.error("Error fetching reviews:", err);
-        alert("Failed to load reviews.");
+      const res = await api.get("/get-event-reviews/", {
+        params: { EvId: event.EvId },
+      });
+      setSelectedEvent(event);
+      setEventReviews(res.data.reviews || []);
+      if (res.data.reviews?.length) {
+        const avg = (
+          res.data.reviews.reduce((sum, r) => sum + r.rating, 0) /
+          res.data.reviews.length
+        ).toFixed(1);
+        setAverageRating(avg);
+      } else {
+        setAverageRating(null);
       }
-    };
+      setViewReviewsModalOpen(true);
+    } catch (err) {
+      console.error("Error fetching reviews:", err);
+      alert("Failed to load reviews.");
+    }
+  };
 
-    
-    const handleSubmitReview = async () => {
-      if (!email || !selectedEvent) return;
-      try {
-        await api.post("/submit-evnet-review/", {
-          email,
-          artid: selectedEvent.EvId,
-          rating,
-          review_desc: reviewDesc,
-        });
-        alert("Review submitted!");
-        setModalOpen(false);
-      } catch (err) {
-        console.error("Error submitting review:", err);
-        alert("Failed to submit review.");
-      }
-    };
+  // submit a new review
+  const handleSubmitReview = async () => {
+    if (!email || !selectedEvent) return;
+    try {
+      await api.post("/submit-evnet-review/", {
+        email,
+        artid: selectedEvent.EvId,
+        rating,
+        review_desc: reviewDesc,
+      });
+      alert("Review submitted!");
+      setModalOpen(false);
+    } catch (err) {
+      console.error("Error submitting review:", err);
+      alert("Failed to submit review.");
+    }
+  };
 
+  // filter events based on search input
   const filteredEvents = events.filter((event) =>
     `${event.EvId} ${event.name} ${event.start_date} ${event.end_date} ${event.address}`
       .toLowerCase()
       .includes(searchTerm.toLowerCase())
   );
-
 
   return (
     <>
@@ -99,6 +102,7 @@ const BrowseEvents = () => {
         <h2>Events</h2>
         <p>Browse through the list of events and their details.</p>
 
+        {/* search input */}
         <input
           type="text"
           placeholder="Search events..."
@@ -107,6 +111,7 @@ const BrowseEvents = () => {
           className={styles.searchInput}
         />
 
+        {/* events table */}
         {filteredEvents.length === 0 ? (
           <p style={{ color: "white", marginTop: "1rem" }}>No events found.</p>
         ) : (
@@ -150,11 +155,13 @@ const BrowseEvents = () => {
           </table>
         )}
       </div>
+
       {/* Write Review Modal */}
       {modalOpen && (
         <div className={styles.modalOverlay}>
           <div className={styles.modal}>
             <h3>Review: {selectedEvent.name}</h3>
+            {/* star rating */}
             <div className={styles.stars}>
               {[1, 2, 3, 4, 5].map((star) => (
                 <FaStar
@@ -169,6 +176,7 @@ const BrowseEvents = () => {
               ))}
             </div>
 
+            {/* review text input */}
             <textarea
               placeholder="Write your review..."
               value={reviewDesc}
@@ -200,7 +208,7 @@ const BrowseEvents = () => {
               <p>No reviews yet.</p>
             ) : (
               <div className={styles.reviewsList}>
-                {artifactReviews.map((review, index) => (
+                {eventReviews.map((review, index) => (
                   <div key={index} className={styles.reviewCard}>
                     <p><strong>Email:</strong> {review.email}</p>
                     <p><strong>Username:</strong> {review.username}</p>

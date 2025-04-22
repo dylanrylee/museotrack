@@ -5,18 +5,23 @@ import EmployeeMenu from "../components/EmployeeMenu";
 import styles from "../styles/SupervisorHomepage.module.css";
 import api from "../api/client";
 
+// Page for employees to view and edit exhibit information
 const EditExhibits = () => {
+  // state for exhibits list and editing functionality
   const [exhibits, setExhibits] = useState([]);
   const [showEditModal, setShowEditModal] = useState(false);
   const [editData, setEditData] = useState({ exid: "", newName: "" });
   const [searchTerm, setSearchTerm] = useState("");
   const [museumAddress, setMuseumAddress] = useState("");
+  
+  // get employee email from local storage
   const email = localStorage.getItem("email");
 
+  // fetch employee's museum exhibits on initial load
   useEffect(() => {
     const fetchEmployeeMuseumExhibits = async () => {
       try {
-        // Step 1: Get employee info
+        // Step 1: Get employee info to find supervisor
         const empRes = await api.get("/get-employee-info/", {
           params: { email },
         });
@@ -40,6 +45,7 @@ const EditExhibits = () => {
     fetchEmployeeMuseumExhibits();
   }, [email]);
 
+  // fetch exhibits for a specific museum address
   const fetchExhibits = async (address) => {
     try {
       const res = await api.get("/get-exhibits/", {
@@ -51,26 +57,29 @@ const EditExhibits = () => {
     }
   };
 
+  // handle changes in edit form inputs
   const handleEditChange = (e) => {
     const { name, value } = e.target;
     setEditData((prev) => ({ ...prev, [name]: value }));
   };
 
+  // open edit modal with current exhibit data
   const handleOpenEdit = (exhibit) => {
     setEditData({ exid: exhibit.exid, newName: exhibit.name });
     setShowEditModal(true);
   };
 
+  // submit updated exhibit information
   const handleUpdateExhibit = async (e) => {
     e.preventDefault();
     try {
-      // 1. Update the exhibit
+      // 1. Update the exhibit name
       await api.post("/update-exhibit/", {
         exid: editData.exid,
         name: editData.newName,
       });
   
-      // 2. Record the edit
+      // 2. Record the edit in history
       await api.post("/record-edit-exhibit/", {
         eemail: email,
         exid: editData.exid,
@@ -83,7 +92,7 @@ const EditExhibits = () => {
     }
   };
   
-
+  // filter exhibits based on search input
   const filteredExhibits = exhibits.filter((ex) =>
     `${ex.exid} ${ex.name}`.toLowerCase().includes(searchTerm.toLowerCase())
   );
@@ -92,9 +101,12 @@ const EditExhibits = () => {
     <>
       <Header />
       <EmployeeMenu />
+      
+      {/* Main content area */}
       <div className={styles.main}>
         <h2>Edit Exhibits</h2>
 
+        {/* Search input for filtering exhibits */}
         <input
           type="text"
           placeholder="Search exhibits..."
@@ -103,6 +115,7 @@ const EditExhibits = () => {
           className={styles.searchInput}
         />
 
+        {/* Exhibits table or empty state message */}
         {filteredExhibits.length > 0 ? (
           <table className={styles.table}>
             <thead>
