@@ -15,6 +15,8 @@ const VisitorHomepage = () => {
   const navigate = useNavigate();
   const email = localStorage.getItem('email');
 
+  console.log(email);
+
   useEffect(() => {
     if (!email) {
       setError('Email not provided.');
@@ -70,11 +72,13 @@ const VisitorHomepage = () => {
   };
 
   const handleDeleteArtifactReview = async (artid) => {
+    if (!email || !artid) {
+      alert("Missing email or artifact ID.");
+      return;
+    }
+
     try {
-      await api.post('/delete-artifact-review/', {
-        email,
-        artid,
-      });
+      await api.post('/delete-artifact-review/', { email: email, artid });
       setArtifactReviews((prev) => prev.filter((r) => r.artid !== artid));
     } catch (err) {
       console.error('Failed to delete artifact review:', err);
@@ -83,17 +87,28 @@ const VisitorHomepage = () => {
   };
 
   const handleDeleteEventReview = async (evid) => {
+    console.log("Deleting review for:", { email, evid });
+  
+    if (!email || !evid) {
+      alert("Missing email or event ID.");
+      return;
+    }
+  
     try {
-      await api.post('/delete-event-review/', {
-        email,
-        evid,
+      const response = await api.post('/delete-event-review/', {
+        email: email,
+        evid: evid,
       });
+  
+      console.log("Response from server:", response.data);
+  
       setEventReviews((prev) => prev.filter((r) => r.evid !== evid));
     } catch (err) {
-      console.error('Failed to delete event review:', err);
+      console.error('❌ Failed to delete event review:', err);
       alert('Could not delete event review.');
     }
   };
+  
 
   return (
     <>
@@ -168,7 +183,7 @@ const VisitorHomepage = () => {
                   </thead>
                   <tbody>
                     {artifactReviews.map((review) => (
-                      <tr key={review.artid}>
+                      <tr key={`${email}_${review.artid}`}>
                         <td>{review.artifact_name}</td>
                         <td>{review.rating}</td>
                         <td>{review.review_text}</td>
@@ -206,7 +221,7 @@ const VisitorHomepage = () => {
                   </thead>
                   <tbody>
                     {eventReviews.map((review) => (
-                      <tr key={review.evid}>
+                      <tr key={`${email}_${review.evid}`}>
                         <td>{review.event_name}</td>
                         <td>{review.rating}</td>
                         <td>{review.review_text}</td>

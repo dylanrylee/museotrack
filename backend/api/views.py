@@ -1210,15 +1210,20 @@ def delete_artifact_review(request):
     email = request.data.get("email")
     artid = request.data.get("artid")
 
-    if not (email and artid):
-        return Response({"message": "Missing email or artid."}, status=400)
+    if not email or not artid:
+        return Response({"message": "Missing email or artifact ID."}, status=400)
 
     try:
         with connection.cursor() as cursor:
-            cursor.execute("DELETE FROM REVIEW_ARTIFACT WHERE VEmail = %s AND ArtID = %s", [email, artid])
+            cursor.execute("""
+                DELETE FROM REVIEW_ARTIFACT
+                WHERE VEmail = %s AND ArtID = %s
+            """, [email, artid])
         return Response({"message": "Review deleted successfully."})
     except Exception as e:
-        return Response({"message": str(e)}, status=500)
+        print("Error deleting artifact review:", e)
+        return Response({"message": "Failed to delete review."}, status=500)
+
 
 @api_view(["GET"])
 def get_artifact_reviews(request):
@@ -1289,62 +1294,74 @@ def get_event_reviews(request):
 @api_view(["GET"])
 def get_visitor_artifact_reviews(request):
     email = request.GET.get("email")
+
     if not email:
-        return Response({"message": "Missing email"}, status=400)
+        return Response({"message": "Missing email."}, status=400)
 
     try:
         with connection.cursor() as cursor:
             cursor.execute("""
                 SELECT 
-                    RA.ArtID,
-                    A.Name,
-                    RA.Review_Desc,
-                    RA.Rating
-                FROM REVIEW_ARTIFACT RA
-                JOIN ARTIFACT A ON RA.ArtID = A.ArtID
-                WHERE RA.VEmail = %s
+                    R.ArtID AS artid, 
+                    A.Name AS artifact_name,
+                    R.Rating, 
+                    R.Review_Desc AS review_text
+                FROM REVIEW_ARTIFACT R
+                JOIN ARTIFACT A ON R.ArtID = A.ArtID
+                WHERE R.VEmail = %s
             """, [email])
             rows = cursor.fetchall()
 
-        reviews = [
-            {
-                "review_id": f"{email}_{row[0]}",
+        reviews = []
+        for row in rows:
+            reviews.append({
+                "artid": row[0],
                 "artifact_name": row[1],
-                "review_text": row[2],
-                "rating": row[3]
-            }
-            for row in rows
-        ]
+                "rating": row[2],
+                "review_text": row[3],
+            })
 
         return Response({"reviews": reviews})
     except Exception as e:
-        return Response({"message": str(e)}, status=500)
+        print("Error fetching artifact reviews:", e)
+        return Response({"message": "Failed to fetch artifact reviews."}, status=500)
+
 
 @api_view(["GET"])
 def get_visitor_event_reviews(request):
     email = request.GET.get("email")
+
     if not email:
-        return Response({"message": "Missing email"}, status=400)
+        return Response({"message": "Missing email."}, status=400)
 
-    with connection.cursor() as cursor:
-        cursor.execute("""
-            SELECT E.Name, R.Rating, R.Review_Desc
-            FROM REVIEW_EVENT R
-            JOIN EVENT E ON R.EvID = E.EvID
-            WHERE R.VEmail = %s
-        """, [email])
-        reviews = cursor.fetchall()
+    try:
+        with connection.cursor() as cursor:
+            cursor.execute("""
+                SELECT 
+                    R.EvID AS evid, 
+                    E.Name AS event_name,
+                    R.Rating, 
+                    R.Review_Desc AS review_text
+                FROM REVIEW_EVENT R
+                JOIN EVENT E ON R.EvID = E.EvID
+                WHERE R.VEmail = %s
+            """, [email])
+            rows = cursor.fetchall()
 
-    review_data = [
-        {
-            "event_name": row[0],
-            "rating": row[1],
-            "review_text": row[2],
-        }
-        for row in reviews
-    ]
+        reviews = []
+        for row in rows:
+            reviews.append({
+                "evid": row[0],
+                "event_name": row[1],
+                "rating": row[2],
+                "review_text": row[3],
+            })
 
-    return Response({"reviews": review_data})
+        return Response({"reviews": reviews})
+    except Exception as e:
+        print("Error fetching event reviews:", e)
+        return Response({"message": "Failed to fetch event reviews."}, status=500)
+
 
 @api_view(["POST"])
 def delete_event_review(request):
@@ -1364,5 +1381,6 @@ def delete_event_review(request):
     except Exception as e:
         print("Error deleting event review:", e)
         return Response({"message": "Failed to delete review."}, status=500)
+
 
 
