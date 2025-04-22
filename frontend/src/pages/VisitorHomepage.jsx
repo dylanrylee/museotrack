@@ -1,51 +1,58 @@
-import React, { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import styles from '../styles/SupervisorHomepage.module.css';
-import Header from '../components/Header';
-import Footer from '../components/Footer';
-import Menu from '../components/Menu';
-import api from '../api/client';
+import React, { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import styles from "../styles/SupervisorHomepage.module.css";
+import Header from "../components/Header";
+import Footer from "../components/Footer";
+import Menu from "../components/Menu";
+import api from "../api/client";
 
 const VisitorHomepage = () => {
-  const [username, setUsername] = useState('');
+  const [username, setUsername] = useState("");
   const [museums, setMuseums] = useState(null);
   const [artifactReviews, setArtifactReviews] = useState(null);
   const [eventReviews, setEventReviews] = useState(null);
-  const [error, setError] = useState('');
+  const [error, setError] = useState("");
   const navigate = useNavigate();
-  const email = localStorage.getItem('email');
+  const email = localStorage.getItem("email");
 
   console.log(email);
 
   useEffect(() => {
     if (!email) {
-      setError('Email not provided.');
+      setError("Email not provided.");
       return;
     }
 
     const fetchVisitorInfo = async () => {
       try {
-        const museumsRes = await api.get('/browse-visited-museums/', { params: { email } });
-        setUsername(museumsRes.data.username || '');
+        const museumsRes = await api.get("/browse-visited-museums/", {
+          params: { email },
+        });
+        setUsername(museumsRes.data.username || "");
         setMuseums(museumsRes.data.visitedMuseums || []);
       } catch (err) {
-        console.error('Error fetching museums:', err);
+        console.error("Error fetching museums:", err);
         setMuseums(null);
       }
 
       try {
-        const artifactReviewsRes = await api.get('/get-visitor-artifact-reviews/', { params: { email } });
+        const artifactReviewsRes = await api.get(
+          "/get-visitor-artifact-reviews/",
+          { params: { email } }
+        );
         setArtifactReviews(artifactReviewsRes.data.reviews || []);
       } catch (err) {
-        console.error('Error fetching artifact reviews:', err);
+        console.error("Error fetching artifact reviews:", err);
         setArtifactReviews(null);
       }
 
       try {
-        const eventReviewsRes = await api.get('/get-visitor-event-reviews/', { params: { email } });
+        const eventReviewsRes = await api.get("/get-visitor-event-reviews/", {
+          params: { email },
+        });
         setEventReviews(eventReviewsRes.data.reviews || []);
       } catch (err) {
-        console.error('Error fetching event reviews:', err);
+        console.error("Error fetching event reviews:", err);
         setEventReviews(null);
       }
     };
@@ -55,19 +62,19 @@ const VisitorHomepage = () => {
 
   const handleLogout = () => {
     localStorage.clear();
-    navigate('/');
+    navigate("/");
   };
 
   const handleRemoveVisit = async (address) => {
     try {
-      await api.post('/delete-visited-museum/', {
+      await api.post("/delete-visited-museum/", {
         visitor_email: email,
         museum_address: address,
       });
       setMuseums((prev) => prev.filter((m) => m.address !== address));
     } catch (err) {
-      console.error('Failed to remove visited museum:', err);
-      alert('Failed to remove museum from visited list.');
+      console.error("Failed to remove visited museum:", err);
+      alert("Failed to remove museum from visited list.");
     }
   };
 
@@ -78,37 +85,36 @@ const VisitorHomepage = () => {
     }
 
     try {
-      await api.post('/delete-artifact-review/', { email: email, artid });
+      await api.post("/delete-artifact-review/", { email: email, artid });
       setArtifactReviews((prev) => prev.filter((r) => r.artid !== artid));
     } catch (err) {
-      console.error('Failed to delete artifact review:', err);
-      alert('Could not delete review.');
+      console.error("Failed to delete artifact review:", err);
+      alert("Could not delete review.");
     }
   };
 
   const handleDeleteEventReview = async (evid) => {
     console.log("Deleting review for:", { email, evid });
-  
+
     if (!email || !evid) {
       alert("Missing email or event ID.");
       return;
     }
-  
+
     try {
-      const response = await api.post('/delete-event-review/', {
+      const response = await api.post("/delete-event-review/", {
         email: email,
         evid: evid,
       });
-  
+
       console.log("Response from server:", response.data);
-  
+
       setEventReviews((prev) => prev.filter((r) => r.evid !== evid));
     } catch (err) {
-      console.error('❌ Failed to delete event review:', err);
-      alert('Could not delete event review.');
+      console.error("❌ Failed to delete event review:", err);
+      alert("Could not delete event review.");
     }
   };
-  
 
   return (
     <>
@@ -117,12 +123,16 @@ const VisitorHomepage = () => {
 
       <div className={styles.main}>
         {error ? (
-          <p style={{ color: 'red' }}>{error}</p>
+          <p style={{ color: "red" }}>{error}</p>
         ) : (
           <>
             <div className={styles.welcomeSection}>
-              <p>Welcome, <strong>{username}</strong></p>
-              <p>Email: <strong>{email}</strong></p>
+              <p>
+                Welcome, <strong>{username}</strong>
+              </p>
+              <p>
+                Email: <strong>{email}</strong>
+              </p>
               <button onClick={handleLogout} className={styles.signOutButton}>
                 Logout
               </button>
@@ -189,7 +199,9 @@ const VisitorHomepage = () => {
                         <td>{review.review_text}</td>
                         <td>
                           <button
-                            onClick={() => handleDeleteArtifactReview(review.artid)}
+                            onClick={() =>
+                              handleDeleteArtifactReview(review.artid)
+                            }
                             className={styles.removeButton}
                           >
                             Delete
