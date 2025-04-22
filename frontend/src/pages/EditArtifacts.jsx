@@ -5,6 +5,7 @@ import EmployeeMenu from "../components/EmployeeMenu";
 import styles from "../styles/SupervisorHomepage.module.css";
 import api from "../api/client";
 
+// Main component for employees to view and update artifact data
 const EditArtifacts = () => {
   const [artifacts, setArtifacts] = useState([]);
   const [exhibits, setExhibits] = useState([]);
@@ -24,11 +25,14 @@ const EditArtifacts = () => {
     exid: "",
   });
 
+  // Get employee's email from local storage
   const email = localStorage.getItem("email");
 
   useEffect(() => {
+    // it fetches both employee and related artifact/exhibit data based on the user's email.
     const fetchEmployeeAndArtifacts = async () => {
       try {
+        // Get the supervisor email and museum address associated with the employee
         const res = await api.get("/get-employee-info/", {
           params: { email },
         });
@@ -37,6 +41,7 @@ const EditArtifacts = () => {
         setSupervisorEmail(semail);
         localStorage.setItem("museumAddress", res.data.museumAddress);
 
+        // Fetch the artifacts and exhibits tied to this supervisor/museum
         await fetchArtifacts(semail);
         await fetchExhibits(res.data.museumAddress);
       } catch (err) {
@@ -47,6 +52,7 @@ const EditArtifacts = () => {
     fetchEmployeeAndArtifacts();
   }, [email]);
 
+  // Fetch artifacts supervised by this supervisor
   const fetchArtifacts = async (semail) => {
     try {
       const res = await api.get("/get-artifacts/", {
@@ -58,6 +64,7 @@ const EditArtifacts = () => {
     }
   };
 
+  // Fetch exhibits for the current museum
   const fetchExhibits = async (address) => {
     try {
       const res = await api.get("/get-exhibits/", {
@@ -69,6 +76,7 @@ const EditArtifacts = () => {
     }
   };
 
+  // Fetch reviews for a given artifact and calculate average rating
   const fetchArtifactReviews = async (artifact) => {
     try {
       const res = await api.get("/get-artifact-reviews/", {
@@ -91,11 +99,13 @@ const EditArtifacts = () => {
     }
   };
 
+  // Update form input values when editing an artifact
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
+  // When user clicks Edit, open modal and preload the artifact data
   const handleOpenEdit = (artifact) => {
     setEditArtifact(artifact);
     setFormData({
@@ -108,6 +118,7 @@ const EditArtifacts = () => {
     setShowEditModal(true);
   };
 
+  // Submit the artifact edits and record that the employee made an edit
   const handleUpdateArtifact = async (e) => {
     e.preventDefault();
     try {
@@ -208,6 +219,7 @@ const EditArtifacts = () => {
         )}
       </div>
 
+      {/* Edit Modal */}
       {showEditModal && (
         <div className={styles.modalBackdrop}>
           <div className={styles.modalBox}>
@@ -237,6 +249,7 @@ const EditArtifacts = () => {
         </div>
       )}
 
+      {/* Reviews Modal */}
       {showReviewsModal && (
         <div className={styles.modalBackdrop}>
           <div className={styles.modalBox}>
