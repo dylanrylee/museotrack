@@ -61,13 +61,20 @@ const ManageArtists = () => {
   const handleAddArtist = async (e) => {
     e.preventDefault();
     try {
-      await api.post("/add-artist/", formData);
+      await api.post("/add-artist/", {
+        date_of_birth: formData.date_of_birth,
+        first_name: formData.first_name,
+        middle_name: formData.middle_name,
+        last_name: formData.last_name,
+        artifact_ids: formData.selectedArtifacts, 
+      });
+  
       setFormData({
         date_of_birth: "",
         first_name: "",
         middle_name: "",
         last_name: "",
-        selectedArtifacts: []
+        selectedArtifacts: [],
       });
       setShowAddModal(false);
       fetchArtists();
@@ -75,6 +82,7 @@ const ManageArtists = () => {
       alert(err.response?.data?.message || "Failed to add artist");
     }
   };
+  
 
   const handleOpenEdit = (artist) => {
     setEditArtist(artist);

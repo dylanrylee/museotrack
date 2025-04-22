@@ -799,14 +799,13 @@ def get_artifacts_for_artist(request):
 @api_view(['POST'])
 def add_artist(request):
     data = request.data
-    semail = request.data.get("semail")  # ← Grab supervisor email
     dob = data.get("date_of_birth")
     first = data.get("first_name")
     middle = data.get("middle_name", "")
     last = data.get("last_name")
     artifacts = data.get("artifact_ids", [])
 
-    if not all([dob, first, last, semail]):
+    if not all([dob, first, last]):
         return Response({"message": "Missing required fields."}, status=400)
 
     try:
@@ -816,18 +815,19 @@ def add_artist(request):
             new_aid = (max_id or 0) + 1
 
             cursor.execute("""
-                INSERT INTO ARTIST (AID, Date_of_Birth, First_Name, Middle_Name, Last_Name, SEmail)
-                VALUES (%s, %s, %s, %s, %s, %s)
-            """, [new_aid, dob, first, middle, last, semail])
+                INSERT INTO ARTIST (AID, Date_of_Birth, First_Name, Middle_Name, Last_Name)
+                VALUES (%s, %s, %s, %s, %s)
+            """, [new_aid, dob, first, middle, last])
 
             for artid in artifacts:
                 cursor.execute("""
                     INSERT INTO CREATES (ArtID, AID) VALUES (%s, %s)
                 """, [artid, new_aid])
 
-        return Response({"message": "Artist added successfully."}, status=200)
+        return Response({"message": "Artist added successfully."})
     except Exception as e:
         return Response({"message": f"Failed to add artist: {str(e)}"}, status=500)
+
 
 
 @api_view(["POST"])
@@ -1345,5 +1345,24 @@ def get_visitor_event_reviews(request):
     ]
 
     return Response({"reviews": review_data})
+
+@api_view(["POST"])
+def delete_event_review(request):
+    email = request.data.get("email")
+    evid = request.data.get("evid")
+
+    if not email or not evid:
+        return Response({"message": "Missing email or event ID."}, status=400)
+
+    try:
+        with connection.cursor() as cursor:
+            cursor.execute("""
+                DELETE FROM REVIEW_EVENT
+                WHERE VEmail = %s AND EvID = %s
+            """, [email, evid])
+        return Response({"message": "Review deleted successfully."})
+    except Exception as e:
+        print("Error deleting event review:", e)
+        return Response({"message": "Failed to delete review."}, status=500)
 
 

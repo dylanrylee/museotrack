@@ -69,17 +69,29 @@ const VisitorHomepage = () => {
     }
   };
 
-  const handleDeleteArtifactReview = async (reviewId) => {
-    const artid = reviewId.split("_")[1];
+  const handleDeleteArtifactReview = async (artid) => {
     try {
-      await api.post("/delete-artifact-review/", {
+      await api.post('/delete-artifact-review/', {
         email,
         artid,
       });
-      setArtifactReviews((prev) => prev.filter((r) => r.review_id !== reviewId));
+      setArtifactReviews((prev) => prev.filter((r) => r.artid !== artid));
     } catch (err) {
-      console.error("Failed to delete review:", err);
-      alert("Could not delete review.");
+      console.error('Failed to delete artifact review:', err);
+      alert('Could not delete review.');
+    }
+  };
+
+  const handleDeleteEventReview = async (evid) => {
+    try {
+      await api.post('/delete-event-review/', {
+        email,
+        evid,
+      });
+      setEventReviews((prev) => prev.filter((r) => r.evid !== evid));
+    } catch (err) {
+      console.error('Failed to delete event review:', err);
+      alert('Could not delete event review.');
     }
   };
 
@@ -156,13 +168,13 @@ const VisitorHomepage = () => {
                   </thead>
                   <tbody>
                     {artifactReviews.map((review) => (
-                      <tr key={review.review_id}>
+                      <tr key={review.artid}>
                         <td>{review.artifact_name}</td>
                         <td>{review.rating}</td>
                         <td>{review.review_text}</td>
                         <td>
                           <button
-                            onClick={() => handleDeleteArtifactReview(review.review_id)}
+                            onClick={() => handleDeleteArtifactReview(review.artid)}
                             className={styles.removeButton}
                           >
                             Delete
@@ -189,14 +201,23 @@ const VisitorHomepage = () => {
                       <th>Event</th>
                       <th>Rating</th>
                       <th>Review</th>
+                      <th>Actions</th>
                     </tr>
                   </thead>
                   <tbody>
-                    {eventReviews.map((review, index) => (
-                      <tr key={index}>
+                    {eventReviews.map((review) => (
+                      <tr key={review.evid}>
                         <td>{review.event_name}</td>
                         <td>{review.rating}</td>
                         <td>{review.review_text}</td>
+                        <td>
+                          <button
+                            onClick={() => handleDeleteEventReview(review.evid)}
+                            className={styles.removeButton}
+                          >
+                            Delete
+                          </button>
+                        </td>
                       </tr>
                     ))}
                   </tbody>

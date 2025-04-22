@@ -35,7 +35,6 @@ urlpatterns = [
     path("record-edit-event/", record_edit_event),
     path("record-edit-exhibit/", record_edit_exhibit),
     path("get-edit-logs/", get_edit_logs),
-
     path("get-all-artifacts/", get_all_artifacts),
     path("get-all-events/", get_all_events),
     path("get-all-exhibits/", get_all_exhibits),
@@ -50,7 +49,7 @@ urlpatterns = [
     path("get-artifact-reviews/", get_artifact_reviews),
     path("submit-event-review/", submit_event_review),
     path("get-event-reviews/", get_event_reviews),
-
+    path("delete-event-review/", delete_event_review),
     path('get-visitor-event-reviews/', get_visitor_event_reviews),
 
     # JWT auth endpoints
