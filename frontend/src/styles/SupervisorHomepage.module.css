@@ -46,7 +46,7 @@ h3 {
 
 .menu {
     display: grid; 
-    background: rgba(0, 0, 0, 0.6);
+    background: rgba(0, 0, 0, 0.829);
     position: fixed;
     top: 15%;
     width: 25%;
@@ -220,13 +220,13 @@ h3 {
 	left: 0;
 	right: 0;
 	bottom: 0;
-	background-color: rgba(0, 0, 0, 0.6);
+	background-color: rgba(0, 0, 0, 0.774);
 	display: flex;
 	justify-content: center;
 	align-items: center;
 	padding: 1rem;
 	overflow-y: auto;
-	z-index: 9999; /* HIGH priority */
+	z-index: 9999;
 }
 
 .editTitle {
@@ -295,7 +295,7 @@ h3 {
   border: 1px solid #ccc;
   padding: 0.75rem 1rem;
   text-align: left;
-  background-color: rgba(255, 255, 255, 0.05);
+  background-color: rgba(255, 255, 255, 0);
 }
 
 .table th {
@@ -516,3 +516,153 @@ h3 {
 	color: white; /* ensures nested <p> also gets white */
   }
 
+
+  /* === RESPONSIVE DESIGN === */
+@media (max-width: 1024px) {
+	.logo,
+	.menu,
+	.main {
+	  width: 90%;
+	  left: auto;
+	  right: auto;
+	  position: static;
+	  margin: 1rem auto;
+	  height: auto;
+	  margin-top: 10%;
+	}
+
+  }
+  
+  @media (max-width: 768px) {
+	.logo p,
+	.menu p,
+	.menu a {
+	  font-size: 1rem;
+	  text-align: center;
+	}
+
+	.menu {
+		margin-top: 10%;
+		width: 90%;
+		left: 5%;
+		position: static;
+	}
+  
+	.signOutButton,
+	.addEmployeeButton,
+	.editButton,
+	.registerButton,
+	.cancelButton,
+	.deleteButton {
+	  width: 100%;
+	  padding: 0.8rem;
+	  font-size: 1rem;
+	  padding: 0.8rem;
+	}
+  
+	.modalBox,
+	.modal,
+	.table {
+	  width: 100%;
+	  display: block;
+	  overflow-x: auto;
+	  white-space: nowrap; 
+	}
+
+	.searchInput {
+		width: 100%;
+		font-size: 1rem;
+		padding: 0.75rem;
+		margin-bottom: 1rem;
+	}
+	
+
+	.modalBox input {
+		font-size: 1rem;
+		padding: 0.75rem;
+	}
+  
+	.actionButtonGroup {
+	  flex-direction: column;
+	  gap: 0.5rem;
+	}
+
+	.table {
+		overflow-x: auto;
+	}
+
+	.modalBox {
+		padding: 1.5rem;
+	  }
+	
+	.editTitle {
+		font-size: 1.5rem;
+		text-align: center;
+	}
+
+	.main {
+		padding: 5rem;
+		width: 95%;
+		margin: 0 auto;
+	}
+
+	.modalBackdrop {
+		padding: 1rem;
+		align-items: flex-start;
+		overflow-y: auto;
+		justify-content: center;
+		max-height: 100vh;
+	}
+	
+	.modalBox {
+	width: 100%;
+	max-width: 500px;
+	margin-top: 2rem;
+	border-radius: 12px;
+	padding: 1.5rem;
+	box-sizing: border-box;
+	max-height: 90vh; /* This allows the modal to fit on screen */
+	overflow-y: auto;  /* Enables scrolling inside the modal */
+	}
+	
+	  .modalBox form {
+		display: flex;
+		flex-direction: column;
+	  }
+	
+	  .modalBox input,
+	  .modalBox select {
+		font-size: 1rem;
+		padding: 0.75rem;
+		margin-bottom: 1rem;
+	  }
+	
+	  .multiSelect {
+		max-height: 150px;
+		overflow-y: auto;
+	  }
+	
+	  .registerButton,
+	  .cancelButton {
+		width: 100%;
+		padding: 0.8rem;
+		font-size: 1rem;
+		margin-bottom: 0.5rem;
+	  }
+
+	  form {
+		max-height: 80vh;
+		overflow-y: auto;
+	}
+	
+  }
+  
+  @media (max-width: 430px) {
+	.menu {
+		margin-top: 25% 
+	}
+	
+	.main {
+		padding: 5%;
+	}
+  }
