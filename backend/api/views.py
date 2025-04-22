@@ -8,40 +8,46 @@ from .token_serializers import CustomTokenObtainPairSerializer
 import random
 
 class CustomTokenObtainPairView(TokenObtainPairView):
+    # Custom token view uses the serializer that authenticates with email
     serializer_class = CustomTokenObtainPairSerializer
 
 # login visitor function -- checks if the visitor is in the database
 @api_view(['POST'])
 def login_visitor(request):
+    # Extract email and password from request data
     email = request.data.get('email')
     password = request.data.get('password')
 
     try:
         with connection.cursor() as cursor:
-            # Get hashed password from USER table
+            # Retrieve the hashed password corresponding to the email from USER table
             cursor.execute("SELECT Password FROM USER WHERE Email = %s", [email])
             user = cursor.fetchone()
 
+        # If user not found, return 401 Unauthorized
         if not user:
             return Response({"message": "Invalid email or password"}, status=401)
 
         stored_password = user[0]
 
-        # Compare raw password to hashed version
+        # Check if the provided password matches the stored hashed password
         if not check_password(password, stored_password):
             return Response({"message": "Invalid email or password"}, status=401)
 
         with connection.cursor() as cursor:
-            # Confirm user is a visitor
+            # Verify if the authenticated user is registered as a visitor
             cursor.execute("SELECT * FROM VISITOR WHERE VEmail = %s", [email])
             visitor = cursor.fetchone()
 
+        # If not a visitor, deny access with status 403 Forbidden
         if not visitor:
             return Response({"message": "You are not registered as a visitor"}, status=403)
 
+        # Successful visitor login
         return Response({"message": "Visitor login successful"}, status=200)
 
     except Exception as e:
+        # Handle any server error during login process
         return Response({"message": f"Server error: {str(e)}"}, status=500)
 
 # register visitor account
@@ -49,6 +55,7 @@ def login_visitor(request):
 def register_visitor(request):
     data = request.data
 
+    # Extract all relevant visitor fields from request data
     email = data.get('email')
     username = data.get('username')
     password = make_password(data.get('password'))
@@ -59,18 +66,19 @@ def register_visitor(request):
 
     try:
         with connection.cursor() as cursor:
-            # Insert into USER
+            # Insert new user record with provided information
             cursor.execute("""
                 INSERT INTO USER (Email, First_Name, Middle_Name, Last_Name, Username, Password, Year_of_Birth)
                 VALUES (%s, %s, %s, %s, %s, %s, %s)
             """, [email, first_name, middle_name, last_name, username, password, year_of_birth])
 
-            # Insert into VISITOR
+            # Insert corresponding visitor record linking email
             cursor.execute("""
                 INSERT INTO VISITOR (VEmail)
                 VALUES (%s)
             """, [email])
 
+        # Confirm account creation
         return Response({"message": "Account created successfully"}, status=201)
 
     except Exception as e:
@@ -78,31 +86,35 @@ def register_visitor(request):
 
 @api_view(['POST'])
 def login_supervisor_employee(request):
+    # Extract email and password from request
     email = request.data.get('email')
     password = request.data.get('password')
 
     try:
         with connection.cursor() as cursor:
-            # Check if user exists
+            # Fetch stored hashed password for given email
             cursor.execute("SELECT Password FROM USER WHERE Email = %s", [email])
             result = cursor.fetchone()
 
+            # If user doesn't exist, return unauthorized
             if not result:
                 return Response({"message": "Invalid email or password"}, status=401)
 
             hashed_pw = result[0]
+            # Check if password matches stored hash
             if not check_password(password, hashed_pw):
                 return Response({"message": "Invalid email or password"}, status=401)
 
         with connection.cursor() as cursor:
-            # First check supervisor
+            # Check if user is supervisor
             cursor.execute("SELECT * FROM SUPERVISOR WHERE SEmail = %s", [email])
             is_supervisor = cursor.fetchone()
 
-            # Then check employee
+            # Check if user is employee
             cursor.execute("SELECT * FROM EMPLOYEE WHERE EEmail = %s", [email])
             is_employee = cursor.fetchone()
 
+        # Determine and return the correct role or deny access if staff member not found
         if is_supervisor:
             return Response({"message": "Supervisor login success", "role": "supervisor"}, status=200)
         elif is_employee:
@@ -116,23 +128,26 @@ def login_supervisor_employee(request):
 # Browse visited museums
 @api_view(['GET'])
 def browse_visited_museums(request):
+    # Get visitor email from query parameters
     v_email = request.query_params.get('email')
 
+    # Validate email presence
     if not v_email:
         return Response({"message": "Missing email"}, status=400)
 
     try:
         with connection.cursor() as cursor:
-            # Get username
+            # Fetch username corresponding to the visitor email
             cursor.execute("SELECT Username FROM USER WHERE Email = %s", [v_email])
             user = cursor.fetchone()
 
+            # Return not found if user does not exist
             if not user:
                 return Response({"message": "User not found"}, status=404)
 
             username = user[0]
 
-            # Get visited museums
+            # Fetch museums visited by the visitor using a JOIN query
             cursor.execute("""
                 SELECT M.Name, M.Address
                 FROM VISITS AS V
@@ -140,14 +155,18 @@ def browse_visited_museums(request):
                 WHERE V.VEmail = %s
             """, [v_email])
             museums = cursor.fetchall()
+
+            # Format museum data into list of dicts
             museum_data = [{"name": row[0], "address": row[1]} for row in museums]
 
+        # Return username and visited museums list
         return Response({
             "username": username,
             "visitedMuseums": museum_data
         })
 
     except Exception as e:
+        # Handle unexpected errors during lookup
         return Response({"message": str(e)}, status=500)
 
 # Register account for supervisor
@@ -155,8 +174,10 @@ def browse_visited_museums(request):
 def register_supervisor(request):
     try:
         data = request.data
+
+        # Extract supervisor and associated museum information from request data
         email = data.get('email')
-        password = make_password(data.get('password'))
+        password = make_password(data.get('password')) # Securely hash the password
         first = data.get('firstName')
         middle = data.get('middleName')
         last = data.get('lastName')
@@ -166,39 +187,43 @@ def register_supervisor(request):
         museum_address = data.get('museumAddress')
 
         with connection.cursor() as cursor:
-            # Insert museum (ignore if already exists)
+            # Insert museum information, ignoring if it already exists to avoid duplicates
             cursor.execute("""
                 INSERT IGNORE INTO MUSEUM (Address, Name)
                 VALUES (%s, %s)
             """, [museum_address, museum_name])
 
-            # Insert user
+            # Insert user record with personal details
             cursor.execute("""
                 INSERT INTO USER (Email, First_Name, Middle_Name, Last_Name, Username, Password, Year_of_Birth)
                 VALUES (%s, %s, %s, %s, %s, %s, %s)
             """, [email, first, middle, last, username, password, yob])
 
-            # Insert supervisor
+            # Insert supervisor record linking to the museum by address
             cursor.execute("""
                 INSERT INTO SUPERVISOR (SEmail, MuseumAddress)
                 VALUES (%s, %s)
             """, [email, museum_address])
 
+        # Confirm successful registration
         return Response({"message": "Supervisor registered successfully"}, status=201)
 
     except Exception as e:
+        # Return error message if something goes wrong on server side
         return Response({"message": f"Server error: {str(e)}"}, status=500)
     
 @api_view(['GET'])
 def get_supervisor_info(request):
+    # Get supervisor's email from query parameters
     email = request.GET.get('email')
 
+    # Validate email was provided in request
     if not email:
         return Response({"message": "Email is required"}, status=400)
 
     try:
         with connection.cursor() as cursor:
-            # Get username and museum address from USER and SUPERVISOR
+            # Join USER, SUPERVISOR, and MUSEUM tables to get supervisor details and associated museum
             cursor.execute("""
                 SELECT U.Username, S.MuseumAddress, M.Name
                 FROM USER U
@@ -209,11 +234,13 @@ def get_supervisor_info(request):
 
             result = cursor.fetchone()
 
+            # If no data is found, supervisor doesn't exist
             if not result:
                 return Response({"message": "Supervisor not found"}, status=404)
 
             username, museum_address, museum_name = result
 
+        # Return supervisor username and museum details
         return Response({
             "username": username,
             "museum": museum_name,
@@ -228,11 +255,13 @@ def get_supervisor_info(request):
 def get_supervisor_employees(request):
     email = request.GET.get('email')
 
+    # If they didn't give us an email, let them know it's required
     if not email:
         return Response({"message": "Email is required"}, status=400)
 
     try:
         with connection.cursor() as cursor:
+            # Look up the supervisor details for the employee using some joins
             cursor.execute("""
                 SELECT E.EEmail, U.First_Name, U.Last_Name, U.Username
                 FROM EMPLOYEE E
@@ -293,6 +322,7 @@ def register_employee(request):
     except Exception as e:
         return Response({"message": f"Server error: {str(e)}"}, status=500)
 
+# update employee data
 @api_view(["POST"])
 def update_employee(request):
     email = request.data.get("email")
@@ -323,6 +353,7 @@ def update_employee(request):
     except Exception as e:
         return Response({"message": f"Update failed: {str(e)}"}, status=500)
 
+# delete the employee instance from the EMPLOYEE
 @api_view(["POST"])
 def delete_employee(request):
     email = request.data.get("email")
@@ -337,6 +368,7 @@ def delete_employee(request):
     except Exception as e:
         return Response({"message": f"Delete failed: {str(e)}"}, status=500)
 
+# get the logged in employee information
 @api_view(["GET"])
 def get_employee_info(request):
     email = request.GET.get("email")
@@ -344,6 +376,8 @@ def get_employee_info(request):
         return Response({"message": "Missing employee email."}, status=400)
 
     try:
+        # this selects the email, username, supervisor email, address of museum, and
+        # the museum name
         with connection.cursor() as cursor:
             cursor.execute("""
                 SELECT 
@@ -374,6 +408,7 @@ def get_employee_info(request):
     except Exception as e:
         return Response({"message": str(e)}, status=500)
 
+# this returns the artifacts data based on the supervisor's museum address
 @api_view(["GET"])
 def get_artifacts(request):
     semail = request.GET.get("semail")
@@ -392,7 +427,8 @@ def get_artifacts(request):
 
             # Get all artifacts that belong to exhibits at that museum
             cursor.execute("""
-                SELECT A.* FROM ARTIFACT A
+                SELECT A.* 
+                FROM ARTIFACT A
                 JOIN EXHIBIT E ON A.ExID = E.ExID
                 WHERE E.Address = %s
             """, [museum_address])
@@ -405,12 +441,15 @@ def get_artifacts(request):
             artid = artifact["artid"]
 
             with connection.cursor() as cursor:
+                # get all the creators from ARTIFACT_CREATORS based on the ArtID
                 cursor.execute("SELECT Creators FROM ARTIFACT_CREATORS WHERE ArtID = %s", [artid])
                 creators = [row[0] for row in cursor.fetchall()]
 
+                # get all the ratings from ARTIFACT_RATINGS based on the ArtID
                 cursor.execute("SELECT Ratings FROM ARTIFACT_RATINGS WHERE ArtID = %s", [artid])
                 ratings = [row[0] for row in cursor.fetchall()]
 
+                # get the details from the ARTIST based on the joined CREATES table's ArtID
                 cursor.execute("""
                     SELECT A.First_Name, A.Middle_Name, A.Last_Name, A.Date_of_Birth
                     FROM ARTIST A
@@ -438,7 +477,6 @@ def get_artifacts(request):
         import traceback
         traceback.print_exc()
         return Response({"message": str(e)}, status=500)
-
 
 # function for adding an artifact
 @api_view(["POST"])
@@ -478,7 +516,7 @@ def add_artifact(request):
         traceback.print_exc()
         return Response({"message": f"Error: {str(e)}"}, status=500)
 
-
+# updates the artifact data
 @api_view(["POST"])
 def update_artifact(request):
     data = request.data
@@ -489,6 +527,7 @@ def update_artifact(request):
             return Response({"message": f"Missing field: {field}"}, status=400)
 
     try:
+        # changes the artifact data based on the input
         with connection.cursor() as cursor:
             cursor.execute("""
                 UPDATE ARTIFACT SET
@@ -511,6 +550,7 @@ def update_artifact(request):
     except Exception as e:
         return Response({"message": f"Update failed: {str(e)}"}, status=500)
 
+# deletes the artifact from the ARTIFACT table
 @api_view(["POST"])
 def delete_artifact(request):
     artid = request.data.get("artid")
@@ -525,6 +565,7 @@ def delete_artifact(request):
     except Exception as e:
         return Response({"message": f"Delete failed: {str(e)}"}, status=500)
 
+# adds an exhibit onto the EXHIBIT relation
 @api_view(['POST'])
 def add_exhibit(request):
     data = request.data
@@ -555,6 +596,7 @@ def add_exhibit(request):
         traceback.print_exc()
         return Response({"message": f"Error: {str(e)}"}, status=500)
 
+# updates exhibit data in the EXHIBIT table
 @api_view(['POST'])
 def update_exhibit(request):
     data = request.data
@@ -567,7 +609,9 @@ def update_exhibit(request):
     try:
         with connection.cursor() as cursor:
             cursor.execute("""
-                UPDATE EXHIBIT SET Name = %s WHERE ExID = %s
+                UPDATE EXHIBIT 
+                SET Name = %s 
+                WHERE ExID = %s
             """, [name, exid])
 
         return Response({"message": "Exhibit updated successfully."}, status=200)
@@ -575,6 +619,7 @@ def update_exhibit(request):
     except Exception as e:
         return Response({"message": f"Update failed: {str(e)}"}, status=500)
 
+# deletes an exhibit from the EXHIBIT relation
 @api_view(['POST'])
 def delete_exhibit(request):
     data = request.data
@@ -592,6 +637,7 @@ def delete_exhibit(request):
     except Exception as e:
         return Response({"message": f"Delete failed: {str(e)}"}, status=500)
 
+# returns exhibit data based on the address input
 @api_view(['GET'])
 def get_exhibits(request):
     address = request.GET.get('address')
@@ -609,6 +655,7 @@ def get_exhibits(request):
     except Exception as e:
         return Response({"message": f"Server error: {str(e)}"}, status=500)
 
+# retuirns the events based on the input address
 @api_view(['GET'])
 def get_events(request):
     address = request.GET.get('address')
@@ -635,7 +682,7 @@ def get_events(request):
         traceback.print_exc()
         return Response({"message": f"Failed to get events: {str(e)}"}, status=500)
 
-
+# adds an event onto EVENT relation
 @api_view(['POST'])
 def add_event(request):
     data = request.data
@@ -676,6 +723,7 @@ def add_event(request):
         traceback.print_exc()
         return Response({"message": f"Error: {str(e)}"}, status=500)
 
+# updates event data based on the input
 @api_view(['POST'])
 def update_event(request):
     data = request.data
@@ -710,7 +758,7 @@ def update_event(request):
         traceback.print_exc()
         return Response({"message": f"Update failed: {str(e)}"}, status=500)
 
-
+# deletes an event from EVENT based on the EvID input
 @api_view(['POST'])
 def delete_event(request):
     evid = request.data.get('evid')
@@ -726,6 +774,7 @@ def delete_event(request):
     except Exception as e:
         return Response({"message": f"Delete failed: {str(e)}"}, status=500)
 
+# returns artists based on the joint table CREATES' AID
 @api_view(["GET"])
 def get_artists(request):
     try:
@@ -746,7 +795,7 @@ def get_artists(request):
                 """, [aid])
                 artifact_rows = cursor.fetchall()
                 artifact_names = [row[1] for row in artifact_rows]
-                selected_artifacts = [str(row[0]) for row in artifact_rows]  # Match <select> input type
+                selected_artifacts = [str(row[0]) for row in artifact_rows]
 
                 artists.append({
                     "aid": aid,
@@ -755,14 +804,14 @@ def get_artists(request):
                     "middle_name": middle,
                     "last_name": last,
                     "artifacts": artifact_names,
-                    "selectedArtifacts": selected_artifacts  # <- Match frontend key
+                    "selectedArtifacts": selected_artifacts 
                 })
 
         return Response({"artists": artists}, status=200)
     except Exception as e:
         return Response({"message": f"Error: {str(e)}"}, status=500)
 
-
+# returns the artifacts based on the same museum address as the SEmail
 @api_view(["GET"])
 def get_artifacts_for_artist(request):
     semail = request.GET.get("semail")
@@ -796,6 +845,7 @@ def get_artifacts_for_artist(request):
         traceback.print_exc()
         return Response({"message": str(e)}, status=500)
 
+# adds an artist onto the ARTIST table
 @api_view(['POST'])
 def add_artist(request):
     data = request.data
@@ -828,8 +878,7 @@ def add_artist(request):
     except Exception as e:
         return Response({"message": f"Failed to add artist: {str(e)}"}, status=500)
 
-
-
+# updates the artist's information based ont the info
 @api_view(["POST"])
 def update_artist(request):
     data = request.data
@@ -866,6 +915,7 @@ def update_artist(request):
     except Exception as e:
         return Response({"message": f"Update failed: {str(e)}"}, status=500)
 
+# deletes an artist from the ARTIST relation
 @api_view(["POST"])
 def delete_artist(request):
     aid = request.data.get("aid")
@@ -882,6 +932,7 @@ def delete_artist(request):
     except Exception as e:
         return Response({"message": f"Delete failed: {str(e)}"}, status=500)
 
+# inserts the email of the employee and the artid of the artifact edited
 @api_view(["POST"])
 def record_edit_artifact(request):
     eemail = request.data.get("eemail")
@@ -901,7 +952,7 @@ def record_edit_artifact(request):
     except Exception as e:
         return Response({"message": str(e)}, status=500)
 
-
+# inserts the email of the employee and the evid of the event edited
 @api_view(["POST"])
 def record_edit_event(request):
     eemail = request.data.get("eemail")
@@ -920,7 +971,7 @@ def record_edit_event(request):
     except Exception as e:
         return Response({"message": str(e)}, status=500)
 
-
+# inserts the email of the employee and the exid of the exhibit edited
 @api_view(["POST"])
 def record_edit_exhibit(request):
     eemail = request.data.get("eemail")
@@ -939,6 +990,8 @@ def record_edit_exhibit(request):
     except Exception as e:
         return Response({"message": str(e)}, status=500)
 
+# this returns every single instance from the joint
+# EDITS_EVENTS, EDITS_ARTIFACTS, and EDITS_EXHIBITS
 @api_view(["GET"])
 def get_edit_logs(request):
     semail = request.GET.get("email") 
@@ -985,11 +1038,15 @@ def get_edit_logs(request):
     except Exception as e:
         return Response({"message": str(e)}, status=500)
 
+# this returns all instances from the ARTIFACTS table
 @api_view(["GET"])
 def get_all_artifacts(request):
     try:
         with connection.cursor() as cursor:
-            cursor.execute("SELECT ArtID, Name, Description, Year_Made, Display_Status, ExID FROM ARTIFACT")
+            cursor.execute("""
+                SELECT ArtID, Name, Description, Year_Made, Display_Status, ExID 
+                FROM ARTIFACT
+            """)
             rows = cursor.fetchall()
 
         artifacts = [
@@ -1006,7 +1063,8 @@ def get_all_artifacts(request):
         return Response({"artifacts": artifacts})
     except Exception as e:
         return Response({"error": str(e)}, status=500)
-    
+
+# this returns all instances form EVENT table 
 @api_view(["GET"])
 def get_all_events(request):
     try:
@@ -1036,6 +1094,7 @@ def get_all_events(request):
     except Exception as e:
         return Response({"error": str(e)}, status=500)
 
+# this returns all instances from the EXHIBIT table
 @api_view(["GET"])
 def get_all_exhibits(request):
     try:
@@ -1051,8 +1110,8 @@ def get_all_exhibits(request):
             {
                 "exid": row[0],
                 "name": row[1],
-                "description": f"Part of {row[3]} at {row[2]}",  # Constructed description
-                "start_date": "N/A",  # Placeholder — you can replace with real dates if you add them
+                "description": f"Part of {row[3]} at {row[2]}",  
+                "start_date": "N/A",  
                 "end_date": "N/A"
             }
             for row in rows
@@ -1061,6 +1120,7 @@ def get_all_exhibits(request):
     except Exception as e:
         return Response({"error": str(e)}, status=500)
 
+# this returns all instances from the MUSEUM table
 @api_view(["GET"])
 def get_all_museums(request):
     try:
@@ -1072,7 +1132,7 @@ def get_all_museums(request):
             {
                 "address": row[0],
                 "name": row[1],
-                "phone": "N/A"  # Placeholder, update if you add a phone column
+                "phone": "N/A" 
             }
             for row in rows
         ]
@@ -1080,6 +1140,7 @@ def get_all_museums(request):
     except Exception as e:
         return Response({"error": str(e)}, status=500)
 
+# this returns all instances from the VISITOR table
 @api_view(["GET"])
 def get_all_visitors(request):
     try:
@@ -1122,6 +1183,7 @@ def get_all_visitors(request):
     except Exception as e:
         return Response({"error": str(e)}, status=500)
 
+# returns all the visited museums by the inputted email
 @api_view(["GET"])
 def get_visited_museums(request):
     email = request.GET.get("email")
@@ -1138,6 +1200,7 @@ def get_visited_museums(request):
     except Exception as e:
         return Response({"message": str(e)}, status=500)
 
+# this adds onto the inputted email's visited museums
 @api_view(["POST"])
 def add_visited_museum(request):
     visitor_email = request.data.get("visitor_email")
@@ -1163,6 +1226,7 @@ def add_visited_museum(request):
     except Exception as e:
         return Response({"message": str(e)}, status=500)
 
+# this deletes from the VISITS relation based on the inputted email and address
 @api_view(["POST"])
 def delete_visited_museum(request):
     visitor_email = request.data.get("visitor_email")
@@ -1181,6 +1245,7 @@ def delete_visited_museum(request):
     except Exception as e:
         return Response({"message": str(e)}, status=500)
 
+# this inserts into the REVIEW_ARTIFACT based on the inputted email, artid, rating, and review_desc
 @api_view(["POST"])
 def submit_artifact_review(request):
     email = request.data.get("email")
@@ -1205,6 +1270,7 @@ def submit_artifact_review(request):
         print("❌ Error submitting artifact review:", e)  # Log to console
         return Response({"message": str(e)}, status=500)
 
+# this deletes from the REVIEW_ARTIFACT based on the email and artid
 @api_view(["POST"])
 def delete_artifact_review(request):
     email = request.data.get("email")
@@ -1224,7 +1290,7 @@ def delete_artifact_review(request):
         print("Error deleting artifact review:", e)
         return Response({"message": "Failed to delete review."}, status=500)
 
-
+# this returns all the reviews of a specific artid
 @api_view(["GET"])
 def get_artifact_reviews(request):
     artid = request.GET.get("artid")
@@ -1252,10 +1318,10 @@ def get_artifact_reviews(request):
         ]
         return Response({"reviews": reviews})
     except Exception as e:
-        print("❌ ERROR:", e)
         traceback.print_exc() 
         return Response({"message": str(e)}, status=500)
 
+# this inserts into the REVIEW_EVENT based on the inputted email, evid, rating, and review_desc
 @api_view(["POST"])
 def submit_event_review(request):
     email = request.data.get("email")
@@ -1271,6 +1337,7 @@ def submit_event_review(request):
         """, [email, evid, review_desc, rating, review_desc, rating])
     return Response({"message": "Review submitted!"})
 
+# returns all event reviews based on the inputted evid
 @api_view(["GET"])
 def get_event_reviews(request):
     evid = request.GET.get("evid")
@@ -1291,6 +1358,7 @@ def get_event_reviews(request):
         } for row in rows]
     return Response({"reviews": reviews})
 
+# returns all visitor's artifact reviews based on their email
 @api_view(["GET"])
 def get_visitor_artifact_reviews(request):
     email = request.GET.get("email")
@@ -1326,7 +1394,7 @@ def get_visitor_artifact_reviews(request):
         print("Error fetching artifact reviews:", e)
         return Response({"message": "Failed to fetch artifact reviews."}, status=500)
 
-
+# returns all visitor's event reviews based on their email
 @api_view(["GET"])
 def get_visitor_event_reviews(request):
     email = request.GET.get("email")
@@ -1362,7 +1430,7 @@ def get_visitor_event_reviews(request):
         print("Error fetching event reviews:", e)
         return Response({"message": "Failed to fetch event reviews."}, status=500)
 
-
+# deletes from EVENT_REVIEW based on the inputted evid and email
 @api_view(["POST"])
 def delete_event_review(request):
     email = request.data.get("email")
