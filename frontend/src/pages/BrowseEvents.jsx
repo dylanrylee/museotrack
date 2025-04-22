@@ -2,13 +2,22 @@ import React, { useEffect, useState } from "react";
 import Header from "../components/Header";
 import Footer from "../components/Footer";
 import Menu from "../components/Menu";
-import { Link } from "react-router-dom";
 import styles from "../styles/SupervisorHomepage.module.css";
+import { FaStar } from "react-icons/fa";
 import api from "../api/client";
 
 const BrowseEvents = () => {
   const [events, setEvents] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
+  const [modalOpen, setModalOpen] = useState(false);
+  const [reviewModalOpen, setReviewModalOpen] = useState(false);
+  const [selectedEvent, setSelectedEvent] = useState(null);
+  const [rating, setRating] = useState(0);
+  const [hoverRating, setHoverRating] = useState(null);
+  const [reviewDesc, setReviewDesc] = useState("");
+  const [eventReviews, setEventReviews] = useState([]);
+  const [averageRating, setAverageRating] = useState(null);
+  const email = localStorage.getItem("email");
 
   const fetchEvents = async () => {
     try {
@@ -22,6 +31,49 @@ const BrowseEvents = () => {
   useEffect(() => {
     fetchEvents();
   }, []);
+
+  const handleOpenWriteReview = (event) => {
+    setSelectedEvent(event);
+    setRating(0);
+    setReviewDesc("");
+    setModalOpen(true);
+  };
+
+  const handleSubmitReview = async () => {
+    try {
+      await api.post("/submit-event-review/", {
+        email,
+        evid: selectedEvent.eid,
+        rating,
+        review_desc: reviewDesc,
+      });
+      alert("Review submitted!");
+      setModalOpen(false);
+    } catch (err) {
+      console.error("Error submitting review:", err);
+      alert("Failed to submit review.");
+    }
+  };
+
+  const handleOpenReviews = async (event) => {
+    try {
+      const res = await api.get("/get-event-reviews/", {
+        params: { evid: event.eid },
+      });
+      setSelectedEvent(event);
+      setEventReviews(res.data.reviews || []);
+      if (res.data.reviews?.length) {
+        const avg = res.data.reviews.reduce((sum, r) => sum + r.rating, 0) / res.data.reviews.length;
+        setAverageRating(avg.toFixed(1));
+      } else {
+        setAverageRating(null);
+      }
+      setReviewModalOpen(true);
+    } catch (err) {
+      console.error("Error loading reviews:", err);
+      alert("Failed to load reviews.");
+    }
+  };
 
   const filteredEvents = events.filter((event) =>
     `${event.eid} ${event.name} ${event.exhibit_name} ${event.museum_name}`.toLowerCase().includes(searchTerm.toLowerCase())
@@ -71,12 +123,20 @@ const BrowseEvents = () => {
                   <td>{event.museum_name}</td>
                   <td>{event.location}</td>
                   <td>
-                    <Link to={`/view-event-reviews/${event.eid}`} className={styles.actionButton}>
-                      View Reviews
-                    </Link>
-                    <Link to={`/write-event-review/${event.eid}`} className={styles.actionButton}>
-                      Write Review
-                    </Link>
+                    <div className={styles.actionButtonGroup}>
+                      <button
+                        className={styles.actionButton}
+                        onClick={() => handleOpenWriteReview(event)}
+                      >
+                        Write Review
+                      </button>
+                      <button
+                        className={styles.actionButton}
+                        onClick={() => handleOpenReviews(event)}
+                      >
+                        View Reviews
+                      </button>
+                    </div>
                   </td>
                 </tr>
               ))}
@@ -84,6 +144,65 @@ const BrowseEvents = () => {
           </table>
         )}
       </div>
+
+      {modalOpen && (
+        <div className={styles.modalOverlay}>
+          <div className={styles.modal}>
+            <h3>Review: {selectedEvent.name}</h3>
+            <div className={styles.stars}>
+              {[1, 2, 3, 4, 5].map((star) => (
+                <FaStar
+                  key={star}
+                  size={28}
+                  onClick={() => setRating(star)}
+                  onMouseEnter={() => setHoverRating(star)}
+                  onMouseLeave={() => setHoverRating(null)}
+                  color={(hoverRating || rating) >= star ? "#ffc107" : "#ccc"}
+                  style={{ cursor: "pointer" }}
+                />
+              ))}
+            </div>
+            <textarea
+              placeholder="Write your review..."
+              value={reviewDesc}
+              onChange={(e) => setReviewDesc(e.target.value)}
+              className={styles.textarea}
+            />
+            <div className={styles.modalActions}>
+              <button onClick={handleSubmitReview} className={styles.actionButton}>
+                Submit
+              </button>
+              <button onClick={() => setModalOpen(false)} className={styles.secondaryButton}>
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {reviewModalOpen && (
+        <div className={styles.modalOverlay}>
+          <div className={styles.modal}>
+            <h3>Reviews for: {selectedEvent.name}</h3>
+            {averageRating && <p>Average Rating: {averageRating} ⭐</p>}
+            {eventReviews.length === 0 ? (
+              <p>No reviews yet.</p>
+            ) : (
+              <div className={styles.reviewsList}>
+                {eventReviews.map((review, idx) => (
+                  <div key={idx} className={styles.reviewCard}>
+                    <p><strong>Email:</strong> {review.email}</p>
+                    <p><strong>Username:</strong> {review.username}</p>
+                    <p><strong>Rating:</strong> {review.rating} ⭐</p>
+                    <p><strong>Description:</strong> {review.review_desc}</p>
+                  </div>
+                ))}
+              </div>
+            )}
+            <button className={styles.cancelButton} onClick={() => setReviewModalOpen(false)}>Close</button>
+          </div>
+        </div>
+      )}
 
       <Footer />
     </>

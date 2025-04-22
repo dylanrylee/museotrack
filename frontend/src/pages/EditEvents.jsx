@@ -9,47 +9,20 @@ const EditEvents = () => {
   const [events, setEvents] = useState([]);
   const [exhibitOptions, setExhibitOptions] = useState([]);
   const [showEditModal, setShowEditModal] = useState(false);
+  const [showReviewsModal, setShowReviewsModal] = useState(false);
+  const [selectedEvent, setSelectedEvent] = useState(null);
+  const [eventReviews, setEventReviews] = useState([]);
+  const [averageRating, setAverageRating] = useState(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [editData, setEditData] = useState({ evid: "", name: "", start_date: "", end_date: "", exid: "" });
-
-  const [museumAddress, setMuseumAddress] = useState("");
   const email = localStorage.getItem("email");
-  const today = new Date().toISOString().split("T")[0]; // YYYY-MM-DD
+  const supervisorMuseumAddress = localStorage.getItem("museumAddress");
+  const today = new Date().toISOString().split("T")[0];
 
-  useEffect(() => {
-    const fetchEventDependencies = async () => {
-      try {
-        // Step 1: Get employee info
-        const empRes = await api.get("/get-employee-info/", {
-          params: { email },
-        });
-
-        const supervisorEmail = empRes.data.supervisorEmail;
-
-        // Step 2: Get supervisor info
-        const supRes = await api.get("/get-supervisor-info/", {
-          params: { email: supervisorEmail },
-        });
-
-        const address = supRes.data.museumAddress;
-        setMuseumAddress(address);
-        localStorage.setItem("museumAddress", address);
-
-        // Step 3: Use museum address to fetch events and exhibits
-        await fetchEvents(address);
-        await fetchExhibits(address);
-      } catch (err) {
-        console.error("Error loading data:", err);
-      }
-    };
-
-    fetchEventDependencies();
-  }, [email]);
-
-  const fetchEvents = async (address) => {
+  const fetchEvents = async () => {
     try {
       const res = await api.get("/get-events/", {
-        params: { address },
+        params: { address: supervisorMuseumAddress },
       });
       setEvents(res.data.events);
     } catch (err) {
@@ -57,16 +30,43 @@ const EditEvents = () => {
     }
   };
 
-  const fetchExhibits = async (address) => {
+  const fetchExhibits = async () => {
     try {
       const res = await api.get("/get-exhibits/", {
-        params: { address },
+        params: { address: supervisorMuseumAddress },
       });
       setExhibitOptions(res.data.exhibits);
     } catch (err) {
       console.error("Failed to fetch exhibits:", err);
     }
   };
+
+  const fetchEventReviews = async (event) => {
+    try {
+      const res = await api.get("/get-event-reviews/", {
+        params: { evid: event.evid },
+      });
+      setSelectedEvent(event);
+      setEventReviews(res.data.reviews || []);
+      if (res.data.reviews?.length) {
+        const avg =
+          res.data.reviews.reduce((sum, r) => sum + r.rating, 0) /
+          res.data.reviews.length;
+        setAverageRating(avg.toFixed(1));
+      } else {
+        setAverageRating(null);
+      }
+      setShowReviewsModal(true);
+    } catch (err) {
+      console.error("Error fetching event reviews:", err);
+      alert("Failed to load reviews.");
+    }
+  };
+
+  useEffect(() => {
+    fetchEvents();
+    fetchExhibits();
+  }, []);
 
   const handleEditChange = (e) => {
     const { name, value } = e.target;
@@ -81,26 +81,20 @@ const EditEvents = () => {
   const handleUpdateEvent = async (e) => {
     e.preventDefault();
     try {
-      // 1. Update the event
       await api.post("/update-event/", editData);
-  
-      // 2. Record the edit in EDITS_EVENTS
       await api.post("/record-edit-event/", {
         eemail: email,
         evid: editData.evid,
       });
-  
       setShowEditModal(false);
-      fetchEvents(museumAddress);
+      fetchEvents();
     } catch (err) {
       alert(err.response?.data?.message || "Failed to update event");
     }
-  };  
+  };
 
   const filteredEvents = events.filter((ev) =>
-    Object.values(ev).some((val) =>
-      String(val).toLowerCase().includes(searchTerm.toLowerCase())
-    )
+    Object.values(ev).some((val) => String(val).toLowerCase().includes(searchTerm.toLowerCase()))
   );
 
   return (
@@ -109,7 +103,6 @@ const EditEvents = () => {
       <EmployeeMenu />
       <div className={styles.main}>
         <h2>Edit Events</h2>
-
         <input
           type="text"
           placeholder="Search..."
@@ -139,12 +132,14 @@ const EditEvents = () => {
                   <td>{ev.end_date}</td>
                   <td>{ev.exhibit_name}</td>
                   <td>
-                    <button
-                      className={styles.editButton}
-                      onClick={() => handleOpenEdit(ev)}
-                    >
-                      ✏️ Edit
-                    </button>
+                    <div className={styles.actionButtonGroup}>
+                      <button className={styles.actionButton} onClick={() => handleOpenEdit(ev)}>
+                        ✏️ Edit
+                      </button>
+                      <button className={styles.actionButton} onClick={() => fetchEventReviews(ev)}>
+                        👁 View Reviews
+                      </button>
+                    </div>
                   </td>
                 </tr>
               ))}
@@ -154,6 +149,30 @@ const EditEvents = () => {
           <p>No events found.</p>
         )}
       </div>
+
+      {showReviewsModal && (
+        <div className={styles.modalBackdrop}>
+          <div className={styles.modalBox}>
+            <h3>Reviews for: {selectedEvent.name}</h3>
+            {averageRating && <p>⭐ Average Rating: {averageRating}</p>}
+            {eventReviews.length === 0 ? (
+              <p>No reviews yet.</p>
+            ) : (
+              <div className={styles.reviewsList}>
+                {eventReviews.map((review, idx) => (
+                  <div key={idx} className={styles.reviewCard}>
+                    <p><strong>Email:</strong> {review.email}</p>
+                    <p><strong>Username:</strong> {review.username}</p>
+                    <p><strong>Rating:</strong> {review.rating}</p>
+                    <p><strong>Description:</strong> {review.review_desc}</p>
+                  </div>
+                ))}
+              </div>
+            )}
+            <button className={styles.cancelButton} onClick={() => setShowReviewsModal(false)}>Close</button>
+          </div>
+        </div>
+      )}
 
       {showEditModal && (
         <div className={styles.modalBackdrop}>
@@ -167,12 +186,7 @@ const EditEvents = () => {
               <label>End Date:</label>
               <input type="date" name="end_date" value={editData.end_date} onChange={handleEditChange} min={today} />
               <label>Choose Exhibit:</label>
-              <select
-                name="exid"
-                value={editData.exid}
-                onChange={handleEditChange}
-                className={styles.selectDropdown}
-              >
+              <select name="exid" value={editData.exid} onChange={handleEditChange} className={styles.selectDropdown}>
                 <option value="">-- Select an Exhibit --</option>
                 {exhibitOptions.map((ex) => (
                   <option key={ex.exid} value={ex.exid}>
@@ -180,20 +194,13 @@ const EditEvents = () => {
                   </option>
                 ))}
               </select>
-              <button type="submit" className={styles.registerButton}>
-                Submit Changes
-              </button>
-              <button
-                type="button"
-                onClick={() => setShowEditModal(false)}
-                className={styles.cancelButton}
-              >
-                Cancel
-              </button>
+              <button type="submit" className={styles.registerButton}>Submit Changes</button>
+              <button type="button" onClick={() => setShowEditModal(false)} className={styles.cancelButton}>Cancel</button>
             </form>
           </div>
         </div>
       )}
+
       <Footer />
     </>
   );

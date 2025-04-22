@@ -82,7 +82,6 @@ const VisitorHomepage = () => {
       alert("Could not delete review.");
     }
   };
-  
 
   return (
     <>
@@ -138,45 +137,43 @@ const VisitorHomepage = () => {
               )}
             </div>
 
-{/* Artifact Reviews */}
-<div className={styles.section}>
-  <h2>Your Artifact Reviews</h2>
-  {artifactReviews === null ? (
-    <p>N/A</p>
-  ) : artifactReviews.length === 0 ? (
-    <p>None</p>
-  ) : (
-    <table className={styles.table}>
-      <thead>
-        <tr>
-          <th>Artifact</th>
-          <th>Rating</th>
-          <th>Review</th>
-          <th>Actions</th>
-        </tr>
-      </thead>
-      <tbody>
-        {artifactReviews.map((review) => (
-          <tr key={review.review_id}>
-            <td>{review.artifact_name}</td>
-            <td>{review.rating}</td>
-            <td>{review.review_text}</td>
-            <td>
-              <button
-                onClick={() => handleDeleteArtifactReview(review.review_id)}
-                className={styles.removeButton}
-              >
-                Delete
-              </button>
-            </td>
-          </tr>
-        ))}
-      </tbody>
-    </table>
-  )}
-</div>
-
-
+            {/* Artifact Reviews */}
+            <div className={styles.section}>
+              <h2>Your Artifact Reviews</h2>
+              {artifactReviews === null ? (
+                <p>N/A</p>
+              ) : artifactReviews.length === 0 ? (
+                <p>None</p>
+              ) : (
+                <table className={styles.table}>
+                  <thead>
+                    <tr>
+                      <th>Artifact</th>
+                      <th>Rating</th>
+                      <th>Review</th>
+                      <th>Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {artifactReviews.map((review) => (
+                      <tr key={review.review_id}>
+                        <td>{review.artifact_name}</td>
+                        <td>{review.rating}</td>
+                        <td>{review.review_text}</td>
+                        <td>
+                          <button
+                            onClick={() => handleDeleteArtifactReview(review.review_id)}
+                            className={styles.removeButton}
+                          >
+                            Delete
+                          </button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              )}
+            </div>
 
             {/* Event Reviews */}
             <div className={styles.section}>
@@ -192,16 +189,14 @@ const VisitorHomepage = () => {
                       <th>Event</th>
                       <th>Rating</th>
                       <th>Review</th>
-                      <th>Date</th>
                     </tr>
                   </thead>
                   <tbody>
-                    {eventReviews.map((review) => (
-                      <tr key={review.review_id}>
+                    {eventReviews.map((review, index) => (
+                      <tr key={index}>
                         <td>{review.event_name}</td>
                         <td>{review.rating}</td>
                         <td>{review.review_text}</td>
-                        <td>{review.review_date}</td>
                       </tr>
                     ))}
                   </tbody>

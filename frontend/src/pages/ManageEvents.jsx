@@ -10,12 +10,16 @@ const ManageEvents = () => {
   const [exhibitOptions, setExhibitOptions] = useState([]);
   const [showModal, setShowModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
+  const [showReviewsModal, setShowReviewsModal] = useState(false);
+  const [selectedEvent, setSelectedEvent] = useState(null);
+  const [eventReviews, setEventReviews] = useState([]);
+  const [averageRating, setAverageRating] = useState(null);
   const [searchTerm, setSearchTerm] = useState("");
-  const [formData, setFormData] = useState({ evid: "", name: "", start_date: "", end_date: "", exid: "" });
+  const [formData, setFormData] = useState({ name: "", start_date: "", end_date: "", exid: "" });
   const [editData, setEditData] = useState({ evid: "", name: "", start_date: "", end_date: "", exid: "" });
 
   const supervisorMuseumAddress = localStorage.getItem("museumAddress");
-  const today = new Date().toISOString().split("T")[0]; // YYYY-MM-DD
+  const today = new Date().toISOString().split("T")[0];
 
   const fetchEvents = async () => {
     try {
@@ -39,6 +43,28 @@ const ManageEvents = () => {
     }
   };
 
+  const fetchEventReviews = async (event) => {
+    try {
+      const res = await api.get("/get-event-reviews/", {
+        params: { evid: event.evid },
+      });
+      setSelectedEvent(event);
+      setEventReviews(res.data.reviews || []);
+      if (res.data.reviews?.length) {
+        const avg =
+          res.data.reviews.reduce((sum, r) => sum + r.rating, 0) /
+          res.data.reviews.length;
+        setAverageRating(avg.toFixed(1));
+      } else {
+        setAverageRating(null);
+      }
+      setShowReviewsModal(true);
+    } catch (err) {
+      console.error("Error fetching event reviews:", err);
+      alert("Failed to load reviews.");
+    }
+  };
+
   useEffect(() => {
     fetchEvents();
     fetchExhibits();
@@ -58,15 +84,7 @@ const ManageEvents = () => {
     e.preventDefault();
     try {
       const { name, start_date, end_date, exid } = formData;
-  
-      await api.post("/add-event/", {
-        name,
-        start_date,
-        end_date,
-        exid,
-        address: supervisorMuseumAddress,
-      });
-  
+      await api.post("/add-event/", { name, start_date, end_date, exid, address: supervisorMuseumAddress });
       setFormData({ name: "", start_date: "", end_date: "", exid: "" });
       setShowModal(false);
       fetchEvents();
@@ -75,7 +93,6 @@ const ManageEvents = () => {
       alert("Failed to add event: " + msg);
     }
   };
-  
 
   const handleOpenEdit = (event) => {
     setEditData({ ...event });
@@ -104,9 +121,7 @@ const ManageEvents = () => {
   };
 
   const filteredEvents = events.filter((ev) =>
-    Object.values(ev).some((val) =>
-      String(val).toLowerCase().includes(searchTerm.toLowerCase())
-    )
+    Object.values(ev).some((val) => String(val).toLowerCase().includes(searchTerm.toLowerCase()))
   );
 
   return (
@@ -115,7 +130,6 @@ const ManageEvents = () => {
       <SupervisorMenu />
       <div className={styles.main}>
         <h2>Manage Events</h2>
-
         <input
           type="text"
           placeholder="Search..."
@@ -123,11 +137,10 @@ const ManageEvents = () => {
           onChange={(e) => setSearchTerm(e.target.value)}
           className={styles.searchInput}
         />
-
         <button
           onClick={() => {
             setShowModal(true);
-            setFormData({ evid: "", name: "", start_date: "", end_date: "", exid: "" });
+            setFormData({ name: "", start_date: "", end_date: "", exid: "" });
           }}
           className={styles.addEmployeeButton}
         >
@@ -155,12 +168,14 @@ const ManageEvents = () => {
                   <td>{ev.end_date}</td>
                   <td>{ev.exhibit_name}</td>
                   <td>
-                    <button
-                      className={styles.editButton}
-                      onClick={() => handleOpenEdit(ev)}
-                    >
-                      ✏️ Edit
-                    </button>
+                    <div className={styles.actionButtonGroup}>
+                      <button className={styles.actionButton} onClick={() => handleOpenEdit(ev)}>
+                        ✏️ Edit
+                      </button>
+                      <button className={styles.actionButton} onClick={() => fetchEventReviews(ev)}>
+                        👁 View Reviews
+                      </button>
+                    </div>
                   </td>
                 </tr>
               ))}
@@ -171,6 +186,32 @@ const ManageEvents = () => {
         )}
       </div>
 
+      {/* View Reviews Modal */}
+      {showReviewsModal && (
+        <div className={styles.modalBackdrop}>
+          <div className={styles.modalBox}>
+            <h3>Reviews for: {selectedEvent.name}</h3>
+            {averageRating && <p>⭐ Average Rating: {averageRating}</p>}
+            {eventReviews.length === 0 ? (
+              <p>No reviews yet.</p>
+            ) : (
+              <div className={styles.reviewsList}>
+                {eventReviews.map((review, idx) => (
+                  <div key={idx} className={styles.reviewCard}>
+                    <p><strong>Email:</strong> {review.email}</p>
+                    <p><strong>Username:</strong> {review.username}</p>
+                    <p><strong>Rating:</strong> {review.rating}</p>
+                    <p><strong>Description:</strong> {review.review_desc}</p>
+                  </div>
+                ))}
+              </div>
+            )}
+            <button className={styles.cancelButton} onClick={() => setShowReviewsModal(false)}>Close</button>
+          </div>
+        </div>
+      )}
+
+      {/* Add Modal */}
       {showModal && (
         <div className={styles.modalBackdrop}>
           <div className={styles.modalBox}>
@@ -183,13 +224,7 @@ const ManageEvents = () => {
               <label>End Date:</label>
               <input type="date" name="end_date" value={formData.end_date} onChange={handleChange} required min={today} />
               <label>Exhibit:</label>
-              <select
-                name="exid"
-                value={formData.exid}
-                onChange={handleChange}
-                required
-                className={styles.selectDropdown}
-              >
+              <select name="exid" value={formData.exid} onChange={handleChange} required className={styles.selectDropdown}>
                 <option value="">Select Exhibit</option>
                 {exhibitOptions.map((ex) => (
                   <option key={ex.exid} value={ex.exid}>
@@ -204,6 +239,7 @@ const ManageEvents = () => {
         </div>
       )}
 
+      {/* Edit Modal */}
       {showEditModal && (
         <div className={styles.modalBackdrop}>
           <div className={styles.modalBox}>
@@ -216,8 +252,7 @@ const ManageEvents = () => {
               <label>End Date:</label>
               <input type="date" name="end_date" value={editData.end_date} onChange={handleEditChange} min={today} />
               <label>Choose Exhibit:</label>
-              <select name="exid" value={editData.exid} onChange={handleEditChange}                 className={styles.selectDropdown}
-              >
+              <select name="exid" value={editData.exid} onChange={handleEditChange} className={styles.selectDropdown}>
                 <option value="">-- Select an Exhibit --</option>
                 {exhibitOptions.map((ex) => (
                   <option key={ex.exid} value={ex.exid}>
@@ -232,6 +267,7 @@ const ManageEvents = () => {
           </div>
         </div>
       )}
+
       <Footer />
     </>
   );

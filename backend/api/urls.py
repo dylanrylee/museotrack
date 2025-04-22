@@ -48,11 +48,10 @@ urlpatterns = [
     path("delete-artifact-review/", delete_artifact_review),
     path('get-visitor-artifact-reviews/', get_visitor_artifact_reviews),
     path("get-artifact-reviews/", get_artifact_reviews),
+    path("submit-event-review/", submit_event_review),
+    path("get-event-reviews/", get_event_reviews),
 
     path('get-visitor-event-reviews/', get_visitor_event_reviews),
-    path('get-event-reviews/', get_event_reviews),
-    path('add-event-review/', add_event_review),
-    path('add-artifact-review/', add_artifact_review),
 
     # JWT auth endpoints
     path('token/', CustomTokenObtainPairView.as_view(), name='token_obtain_pair'),

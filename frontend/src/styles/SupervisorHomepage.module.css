@@ -45,18 +45,18 @@ h3 {
 }
 
 .menu {
-	display: grid;
-	background: rgba(0, 0, 0, 0.6);
-	position: fixed;
-	top: 15%;
-	width: 25%;
-	height: 55%;
-	left: 5%;
-	border-radius: 15px;
-	border-color: white;
-	border-style: solid;
-	padding: 1rem 0;
-}
+    display: grid; 
+    background: rgba(0, 0, 0, 0.6);
+    position: fixed;
+    top: 15%;
+    width: 25%;
+    height: 65%; 
+    left: 5%;
+    border-radius: 15px;
+    border-color: white;
+    border-style: solid;
+    padding: 1rem 0; 
+  }
 
 .menu p {
 	display: block;

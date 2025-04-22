@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import styles from '../styles/Pages.module.css';
+import styles from '../styles/SupervisorHomepage.module.css';
 
 const Menu = () => {
   return (

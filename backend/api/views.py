@@ -1251,11 +1251,40 @@ def get_artifact_reviews(request):
         traceback.print_exc() 
         return Response({"message": str(e)}, status=500)
 
+@api_view(["POST"])
+def submit_event_review(request):
+    email = request.data.get("email")
+    evid = request.data.get("evid")
+    rating = request.data.get("rating")
+    review_desc = request.data.get("review_desc")
 
+    with connection.cursor() as cursor:
+        cursor.execute("""
+            INSERT INTO REVIEW_EVENT (VEmail, EvID, Review_Desc, Rating)
+            VALUES (%s, %s, %s, %s)
+            ON DUPLICATE KEY UPDATE Review_Desc=%s, Rating=%s
+        """, [email, evid, review_desc, rating, review_desc, rating])
+    return Response({"message": "Review submitted!"})
 
-
-
-
+@api_view(["GET"])
+def get_event_reviews(request):
+    evid = request.GET.get("evid")
+    with connection.cursor() as cursor:
+        cursor.execute("""
+            SELECT R.VEmail, U.Username, R.Review_Desc, R.Rating
+            FROM REVIEW_EVENT R
+            JOIN VISITOR V ON R.VEmail = V.VEmail
+            JOIN USER U ON V.VEmail = U.Email
+            WHERE R.EvID = %s
+        """, [evid])
+        rows = cursor.fetchall()
+        reviews = [{
+            "email": row[0],
+            "username": row[1],
+            "review_desc": row[2],
+            "rating": row[3],
+        } for row in rows]
+    return Response({"reviews": reviews})
 
 @api_view(["GET"])
 def get_visitor_artifact_reviews(request):
@@ -1291,79 +1320,30 @@ def get_visitor_artifact_reviews(request):
     except Exception as e:
         return Response({"message": str(e)}, status=500)
 
-
-
-
-
-
 @api_view(["GET"])
 def get_visitor_event_reviews(request):
     email = request.GET.get("email")
     if not email:
-        return Response({"message": "Email is required."}, status=400)
-    
-    try:
-        with connection.cursor() as cursor:
-            cursor.execute("""
-                SELECT * FROM EVENT_REVIEW WHERE VEmail = %s
-            """, [email])
-            reviews = cursor.fetchall()
-        return Response({"event_reviews": reviews}, status=200)
-    except Exception as e:
-        return Response({"message": str(e)}, status=500)
+        return Response({"message": "Missing email"}, status=400)
 
-@api_view(["GET"])
-def get_event_reviews(request):
-    evid = request.GET.get("evid")
-    if not evid:
-        return Response({"message": "EvID is required."}, status=400)
+    with connection.cursor() as cursor:
+        cursor.execute("""
+            SELECT E.Name, R.Rating, R.Review_Desc
+            FROM REVIEW_EVENT R
+            JOIN EVENT E ON R.EvID = E.EvID
+            WHERE R.VEmail = %s
+        """, [email])
+        reviews = cursor.fetchall()
 
-    try:
-        with connection.cursor() as cursor:
-            cursor.execute("""
-                SELECT * FROM EVENT_REVIEW WHERE EvID = %s
-            """, [evid])
-            reviews = cursor.fetchall()
-        return Response({"event_reviews": reviews}, status=200)
-    except Exception as e:
-        return Response({"message": str(e)}, status=500)
+    review_data = [
+        {
+            "event_name": row[0],
+            "rating": row[1],
+            "review_text": row[2],
+        }
+        for row in reviews
+    ]
 
-@api_view(["POST"])
-def add_event_review(request):
-    email = request.data.get("email")
-    evid = request.data.get("evid")
-    rating = request.data.get("rating")
-    review_text = request.data.get("review")
+    return Response({"reviews": review_data})
 
-    if not all([email, evid, rating, review_text]):
-        return Response({"message": "Missing fields."}, status=400)
 
-    try:
-        with connection.cursor() as cursor:
-            cursor.execute("""
-                INSERT INTO EVENT_REVIEW (VEmail, EvID, Ratings, Review)
-                VALUES (%s, %s, %s, %s)
-            """, [email, evid, rating, review_text])
-        return Response({"message": "Event review added."}, status=201)
-    except Exception as e:
-        return Response({"message": str(e)}, status=500)
-
-@api_view(["POST"])
-def add_artifact_review(request):
-    email = request.data.get("email")
-    artid = request.data.get("artid")
-    rating = request.data.get("rating")
-    review_text = request.data.get("review")
-
-    if not all([email, artid, rating, review_text]):
-        return Response({"message": "Missing fields."}, status=400)
-
-    try:
-        with connection.cursor() as cursor:
-            cursor.execute("""
-                INSERT INTO ARTIFACT_REVIEW (VEmail, ArtID, Ratings, Review)
-                VALUES (%s, %s, %s, %s)
-            """, [email, artid, rating, review_text])
-        return Response({"message": "Artifact review added."}, status=201)
-    except Exception as e:
-        return Response({"message": str(e)}, status=500)
