@@ -19,7 +19,7 @@ const SupervisorLogin = () => {
       localStorage.setItem('email', email);
       localStorage.setItem('isLoggedIn', 'true');
 
-      // ✅ Ensure localStorage writes before navigation
+      // Ensure localStorage writes before navigation
       setTimeout(() => {
         if (role === 'supervisor') {
           navigate('/supervisor-homepage');
