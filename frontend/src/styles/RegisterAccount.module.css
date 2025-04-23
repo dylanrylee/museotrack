@@ -8,7 +8,10 @@
     overflow-y: auto;             /* Enables vertical scroll if needed */
 }
   
-  
+/* 
+    box has white background, good amount of padding within, has rounded edges,
+    good width, and centered text alignment
+*/
 .box {
     background: #ffffffee;
     padding: 2rem 3rem;
@@ -43,7 +46,11 @@
     border: 1px solid #ccc;
     border-radius: 6px;
 }
-  
+
+/* 
+    button has good padding for the text, text color is white, background color is dark,
+    bolded, and good transition as well
+*/
 .registerButton {
     padding: 0.7rem;
     background-color: #222;
@@ -51,7 +58,6 @@
     border: none;
     border-radius: 6px;
     font-weight: bold;
-    cursor: pointer;
     transition: background 0.3s;
 }
   
@@ -64,7 +70,10 @@
     color: green;
     font-weight: 600;
 }
-  
+
+/* 
+    good font size for better visibility, and adds slight margin from the top
+*/
 .loginPrompt {
     font-size: 0.9rem;
     margin-top: 1rem;

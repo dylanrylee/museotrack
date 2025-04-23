@@ -2,6 +2,7 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import styles from '../styles/SupervisorHomepage.module.css';
 
+// This is the navigation menu for the Supervisor
 const SupervisorMenu = () => {
   return (
     <div className={styles.menu}>

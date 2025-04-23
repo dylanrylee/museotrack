@@ -6,9 +6,11 @@ import styles from "../styles/SupervisorHomepage.module.css";
 import api from "../api/client";
 
 const BrowseExhibits = () => {
+  // these are our required states for this component
   const [exhibits, setExhibits] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
 
+  // this fetches exhibits from the backend api endpoint get-all-exhibits
   const fetchExhibits = async () => {
     try {
       const res = await api.get("/get-all-exhibits/");
@@ -22,6 +24,7 @@ const BrowseExhibits = () => {
     fetchExhibits();
   }, []);
 
+  // this filters exhibits by their exid, name, and description
   const filteredExhibits = exhibits.filter((exhibit) =>
     `${exhibit.exid} ${exhibit.name} ${exhibit.description}`.toLowerCase().includes(searchTerm.toLowerCase())
   );

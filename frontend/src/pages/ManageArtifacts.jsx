@@ -6,7 +6,7 @@ import styles from "../styles/SupervisorHomepage.module.css";
 import api from "../api/client";
 
 const ManageArtifacts = () => {
-    // State variables for managing artifact data and UI states
+  // State variables for managing artifact data and UI states
   const [artifacts, setArtifacts] = useState([]);
   const [exhibits, setExhibits] = useState([]);
   const [showAddModal, setShowAddModal] = useState(false);

@@ -1,6 +1,7 @@
 import React from 'react';
 import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
 
+// importing all the pages we want to navigate to
 import LoginPage from './pages/LoginPage';
 import RegisterAccount from './pages/RegisterAccount';
 import VisitorHomepage from './pages/VisitorHomepage';
@@ -26,6 +27,7 @@ import EmployeeArtists from './pages/EmployeeArtists';
 
 function App() {
   return (
+    // These are the route links for the pages we want to go to.
     <Router>
       <Routes>
         <Route path="/" element={<LoginPage />} />

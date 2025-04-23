@@ -1,20 +1,24 @@
 .loginPageWrapper {
     display: flex;
     justify-content: center;
-    align-items: center;
+    align-items: center; /* centerizes the items inside this wrapper */
     height: 100vh;
     background-image: url('../assets/login-background.jpg');
     background-size: cover;
-    background-repeat: no-repeat;
+    background-repeat: no-repeat; /* this background does not repeat */
     background-attachment: fixed;
     background-position: center;
 }
 
 body {
-    font-family: 'Gill Sans', 'Gill Sans MT', Calibri, 'Trebuchet MS', sans-serif;
+    font-family: 'Gill Sans', 'Gill Sans MT', Calibri, 'Trebuchet MS', sans-serif; /* this is the font for the entire page that connects to this css file */
 }
 
-.loginBox {
+/* 
+    background is white, has good padding for better spacing aesthetics, rounded edges, 
+    max-wdith is 400px, and text is center aligned
+*/
+.loginBox { 
     background: #ffffffd7;
     padding: 2rem 3rem;
     border-radius: 12px;
@@ -31,6 +35,10 @@ body {
     font-style: italic;
 }
 
+/* 
+    the form is designed as a column, has good amount of gap in between each instance inside, 
+    and has good spacing from the bottom as well
+*/
 .form {
     display: flex;
     flex-direction: column;
@@ -50,13 +58,16 @@ body {
     font-size: 1rem;
 }
 
+/* 
+    has good amount of padding, text color is white, background color is dark, slightly rounded edges,
+    and has good transition
+*/
 .signInButton {
     padding: 0.7rem;
     background-color: #222;
     color: white;
     border: none;
     border-radius: 6px;
-    cursor: pointer;
     font-weight: bold;
     transition: background 0.3s;
 }
@@ -73,7 +84,10 @@ body {
     font-size: 0.9rem;
     margin-top: 0.5rem;
 }
-  
+
+/* 
+    error message is red, and bolded
+*/
 .errorMessage {
     color: red;
     font-weight: bold;

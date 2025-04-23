@@ -6,10 +6,12 @@ import styles from "../styles/SupervisorHomepage.module.css";
 import api from "../api/client";
 
 const BrowseVisitors = () => {
+  // these are our required components for this component
   const [visitors, setVisitors] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [message, setMessage] = useState("");
 
+  // this fetches visitors by making an api backend endpoint call to get-all-visitors/
   const fetchVisitors = async () => {
     try {
       const res = await api.get("/get-all-visitors/");
@@ -25,6 +27,7 @@ const BrowseVisitors = () => {
     fetchVisitors();
   }, []);
 
+  // filters by email, first name, middle name, last name, username, year of birth, visited museum name
   const filteredVisitors = visitors.filter((visitor) =>
     `${visitor.email} ${visitor.first_name} ${visitor.middle_name} ${visitor.last_name} ${visitor.username} ${visitor.year_of_birth} ${visitor.visited_museum_names?.join(" ") || ""}`
       .toLowerCase()

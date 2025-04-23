@@ -6,11 +6,14 @@ import styles from "../styles/SupervisorHomepage.module.css";
 import api from "../api/client";
 
 const BrowseMuseums = () => {
+  // these are our required states for this component
   const [museums, setMuseums] = useState([]);
   const [visitedAddresses, setVisitedAddresses] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [message, setMessage] = useState("");
 
+  // this fetches all museums from the backend
+  // api endpint get-all-museums/
   const fetchMuseums = async () => {
     try {
       const res = await api.get("/get-all-museums/");
@@ -20,11 +23,12 @@ const BrowseMuseums = () => {
     }
   };
 
+  // this fetches all the visited museums data from the get-visited-museums/(email of the visitor)
   const fetchVisitedMuseums = async () => {
     const email = localStorage.getItem("email");
     try {
       const res = await api.get(`/get-visited-museums/?email=${email}`);
-      const addresses = res.data.visits.map((visit) => visit.address);
+      const addresses = res.data.visits.map((visit) => visit.address); // maps to the address
       setVisitedAddresses(addresses);
     } catch (err) {
       console.error("Error fetching visited museums:", err);
@@ -36,22 +40,24 @@ const BrowseMuseums = () => {
     fetchVisitedMuseums();
   }, []);
 
+  // this inserts into the table by making an api backend call to add-visited-museums/
   const handleAddToVisited = async (museumAddress) => {
     const email = localStorage.getItem("email");
     try {
-      await api.post("/add-visited-museum/", {
+      await api.post("/add-visited-museum/", { // input params for our api endpoint call
         visitor_email: email,
         museum_address: museumAddress,
       });
       setMessage("Museum added to visited list successfully!");
       setVisitedAddresses((prev) => [...prev, museumAddress]);
-      setTimeout(() => setMessage(""), 3000);
+      setTimeout(() => setMessage(""), 3000); // sets a counter for 3 seconds
     } catch (err) {
       setMessage(err.response?.data?.message || "Failed to add museum to visited list");
       setTimeout(() => setMessage(""), 3000);
     }
   };
 
+  // filters museums by their address, and museum name if there exists text in the text field
   const filteredMuseums = museums.filter((museum) =>
     `${museum.address} ${museum.name}`.toLowerCase().includes(searchTerm.toLowerCase())
   );

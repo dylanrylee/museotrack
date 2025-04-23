@@ -6,12 +6,14 @@ import styles from "../styles/SupervisorHomepage.module.css";
 import api from "../api/client";
 
 const LogsForEdits = () => {
+  // these are our states for this component
   const [logs, setLogs] = useState([]);
   const [error, setError] = useState("");
 
   useEffect(() => {
     const fetchLogs = async () => {
       try {
+        // this gets the email of the logged in user
         const email = localStorage.getItem("email");
         const res = await api.get("/get-edit-logs/", {
           params: { email },

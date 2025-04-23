@@ -6,9 +6,11 @@ import styles from "../styles/SupervisorHomepage.module.css";
 import api from "../api/client";
 
 const BrowseArtists = () => {
+  // These are our required states for this component
   const [artists, setArtists] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
 
+  // this fetches artist data by making a call to the backend api endpoint get-artists/
   const fetchArtists = async () => {
     try {
       const res = await api.get("/get-artists/");
@@ -22,6 +24,8 @@ const BrowseArtists = () => {
     fetchArtists();
   }, []);
 
+  // this filters artists based on the input onto the text field
+  // it filters by aid, first name, last name
   const filteredArtists = artists.filter((artist) =>
     `${artist.aid} ${artist.first_name} ${artist.last_name}`.toLowerCase().includes(searchTerm.toLowerCase())
   );

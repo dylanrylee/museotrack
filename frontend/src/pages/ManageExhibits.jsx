@@ -6,6 +6,7 @@ import styles from "../styles/SupervisorHomepage.module.css";
 import api from "../api/client";
 
 const ManageExhibits = () => {
+  // these are our states for this component
   const [exhibits, setExhibits] = useState([]);
   const [showModal, setShowModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);

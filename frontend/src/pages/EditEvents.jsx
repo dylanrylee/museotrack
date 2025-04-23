@@ -6,6 +6,7 @@ import styles from "../styles/SupervisorHomepage.module.css";
 import api from "../api/client";
 
 const EditEvents = () => {
+  // our states for this component
   const [events, setEvents] = useState([]);
   const [exhibitOptions, setExhibitOptions] = useState([]);
   const [showEditModal, setShowEditModal] = useState(false);
@@ -19,6 +20,7 @@ const EditEvents = () => {
   const supervisorMuseumAddress = localStorage.getItem("museumAddress");
   const today = new Date().toISOString().split("T")[0];
 
+  // fetches events by making an api endpoint backend call to get-events/
   const fetchEvents = async () => {
     try {
       const res = await api.get("/get-events/", {
@@ -30,10 +32,11 @@ const EditEvents = () => {
     }
   };
 
+  // fetches exhibits by making a call to the backend endpoint get-exhibits/
   const fetchExhibits = async () => {
     try {
       const res = await api.get("/get-exhibits/", {
-        params: { address: supervisorMuseumAddress },
+        params: { address: supervisorMuseumAddress }, // input params for the backend api call
       });
       setExhibitOptions(res.data.exhibits);
     } catch (err) {
@@ -41,6 +44,7 @@ const EditEvents = () => {
     }
   };
 
+  // fetches event reviews by call the backend api get-event-reviews/
   const fetchEventReviews = async (event) => {
     try {
       const res = await api.get("/get-event-reviews/", {
@@ -49,7 +53,7 @@ const EditEvents = () => {
       setSelectedEvent(event);
       setEventReviews(res.data.reviews || []);
       if (res.data.reviews?.length) {
-        const avg =
+        const avg = // calculates the average rating if there exists rating / reviews for this event
           res.data.reviews.reduce((sum, r) => sum + r.rating, 0) /
           res.data.reviews.length;
         setAverageRating(avg.toFixed(1));
@@ -68,31 +72,35 @@ const EditEvents = () => {
     fetchExhibits();
   }, []);
 
+  // this handles the changes of the edits, and sets the new data as such
   const handleEditChange = (e) => {
     const { name, value } = e.target;
     setEditData((prev) => ({ ...prev, [name]: value }));
   };
 
+  // sets edit data of the event, and shows the edit modal
   const handleOpenEdit = (event) => {
     setEditData({ ...event });
     setShowEditModal(true);
   };
 
+  // calls the backend endpoints update-event/ and record-edit-event/
   const handleUpdateEvent = async (e) => {
     e.preventDefault();
     try {
       await api.post("/update-event/", editData);
-      await api.post("/record-edit-event/", {
+      await api.post("/record-edit-event/", { // input params for this api call
         eemail: email,
         evid: editData.evid,
       });
-      setShowEditModal(false);
+      setShowEditModal(false); // turns off the modal
       fetchEvents();
     } catch (err) {
       alert(err.response?.data?.message || "Failed to update event");
     }
   };
 
+  // filters the events
   const filteredEvents = events.filter((ev) =>
     Object.values(ev).some((val) => String(val).toLowerCase().includes(searchTerm.toLowerCase()))
   );

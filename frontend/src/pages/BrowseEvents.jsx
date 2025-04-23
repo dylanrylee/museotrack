@@ -7,6 +7,7 @@ import { FaStar } from "react-icons/fa";
 import api from "../api/client";
 
 const BrowseEvents = () => {
+  // these are our required states for this component
   const [events, setEvents] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [modalOpen, setModalOpen] = useState(false);
@@ -17,8 +18,11 @@ const BrowseEvents = () => {
   const [reviewDesc, setReviewDesc] = useState("");
   const [eventReviews, setEventReviews] = useState([]);
   const [averageRating, setAverageRating] = useState(null);
+
+  // this gets the email of the logged in visitor
   const email = localStorage.getItem("email");
 
+  // this fetches events by making a call to the backend api endpoint get-all-events/
   const fetchEvents = async () => {
     try {
       const res = await api.get("/get-all-events/");
@@ -32,6 +36,8 @@ const BrowseEvents = () => {
     fetchEvents();
   }, []);
 
+  // sets the selected event as the event itself, sets rating as 0, sets review desc as blank,
+  // and also sets the modal to be open
   const handleOpenWriteReview = (event) => {
     setSelectedEvent(event);
     setRating(0);
@@ -39,9 +45,10 @@ const BrowseEvents = () => {
     setModalOpen(true);
   };
 
+  // this handles submitting reviews by making a call to the backend api endpoint submit-event-review/
   const handleSubmitReview = async () => {
     try {
-      await api.post("/submit-event-review/", {
+      await api.post("/submit-event-review/", { // these are our input params for the api call
         email,
         evid: selectedEvent.eid,
         rating,
@@ -55,6 +62,7 @@ const BrowseEvents = () => {
     }
   };
 
+  // this fetches the reviews from the api call get-event-reviews/
   const handleOpenReviews = async (event) => {
     try {
       const res = await api.get("/get-event-reviews/", {
@@ -62,7 +70,7 @@ const BrowseEvents = () => {
       });
       setSelectedEvent(event);
       setEventReviews(res.data.reviews || []);
-      if (res.data.reviews?.length) {
+      if (res.data.reviews?.length) { // calculates the average rating, if there exists ratings / reviews for this event
         const avg = res.data.reviews.reduce((sum, r) => sum + r.rating, 0) / res.data.reviews.length;
         setAverageRating(avg.toFixed(1));
       } else {
@@ -75,6 +83,8 @@ const BrowseEvents = () => {
     }
   };
 
+  // this filters events based on the input text
+  // it filters by eid, event name, exhibit name, and museum name
   const filteredEvents = events.filter((event) =>
     `${event.eid} ${event.name} ${event.exhibit_name} ${event.museum_name}`.toLowerCase().includes(searchTerm.toLowerCase())
   );

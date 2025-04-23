@@ -6,9 +6,11 @@ import styles from "../styles/SupervisorHomepage.module.css";
 import api from "../api/client";
 
 const EmployeeArtists = () => {
+  // these are our required states for this component
   const [artists, setArtists] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
 
+  // calls api backend endpoint get-artists/ to fetch the artists
   const fetchArtists = async () => {
     try {
       const res = await api.get("/get-artists/");
@@ -22,6 +24,7 @@ const EmployeeArtists = () => {
     fetchArtists();
   }, []);
 
+  // filters artists by their aid, first name, and last name
   const filteredArtists = artists.filter((artist) =>
     `${artist.aid} ${artist.first_name} ${artist.last_name}`.toLowerCase().includes(searchTerm.toLowerCase())
   );

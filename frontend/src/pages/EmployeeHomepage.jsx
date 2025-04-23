@@ -7,6 +7,7 @@ import EmployeeMenu from "../components/EmployeeMenu";
 import api from "../api/client";
 
 const EmployeeHomepage = () => {
+  // our requried states for this component
   const [username, setUsername] = useState("");
   const [museum, setMuseum] = useState("");
   const [museumAddress, setMuseumAddress] = useState("");
@@ -15,6 +16,7 @@ const EmployeeHomepage = () => {
   const [error, setError] = useState("");
   const navigate = useNavigate();
 
+  // email of the logged in user
   const email = localStorage.getItem("email");
 
   // Step 1: Fetch current employee info
@@ -24,18 +26,19 @@ const EmployeeHomepage = () => {
       return;
     }
 
+    // fetches employee info by making a call to the get-employee-info/ backend api endpoint
     const fetchEmployeeInfo = async () => {
       try {
         const res = await api.get("/get-employee-info/", {
           params: { email },
         });
 
-        setUsername(res.data.username);
+        setUsername(res.data.username); // sets these data
         setMuseum(res.data.museumName);
         setMuseumAddress(res.data.museumAddress);
         setSupervisorEmail(res.data.supervisorEmail);
 
-        localStorage.setItem("museumAddress", res.data.museumAddress);
+        localStorage.setItem("museumAddress", res.data.museumAddress); // sets the museum address to be used later
       } catch (err) {
         console.error("Error loading employee info:", err);
         setError(
@@ -70,6 +73,8 @@ const EmployeeHomepage = () => {
     fetchEmployees();
   }, [supervisorEmail]);
 
+  // handles the logout logic
+  // this goes back to the root route in our frontend
   const handleLogout = () => {
     localStorage.clear();
     navigate("/");

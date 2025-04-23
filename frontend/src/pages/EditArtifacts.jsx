@@ -7,6 +7,7 @@ import api from "../api/client";
 
 // Main component for employees to view and update artifact data
 const EditArtifacts = () => {
+  // our states for this component
   const [artifacts, setArtifacts] = useState([]);
   const [exhibits, setExhibits] = useState([]);
   const [supervisorEmail, setSupervisorEmail] = useState("");

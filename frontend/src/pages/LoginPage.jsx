@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom'; 
 import styles from '../styles/LoginPage.module.css';
-import api from '../api/client'; // your Axios instance
+import api from '../api/client'; 
 
 const LoginPage = () => {
+  // these are our required states for this component
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
@@ -13,22 +14,22 @@ const LoginPage = () => {
     e.preventDefault();
   
     try {
-      await api.post('/login-visitor/', { email, password }); // use your custom endpoint
-      localStorage.setItem('email', email);
+      // this makes a call to the login-visitor/ backend endpoint api with these params
+      await api.post('/login-visitor/', { email, password }); 
+      localStorage.setItem('email', email); // sets the local storage's email as the logged in email
       localStorage.setItem('isLoggedIn', 'true');
   
       setError('');
-      navigate('/visitor-homepage');
+      navigate('/visitor-homepage'); // heads to the visitor homepage when login in succesful
     } catch (err) {
       const msg = err.response?.data?.message || 'Invalid email or password';
       setError(msg);
     }
   };
-  
 
+  // gets the local storage's email to be used in here
   localStorage.getItem('email')
   
-
   return (
     <div className={styles.loginPageWrapper}>
       <div className={styles.loginBox}>

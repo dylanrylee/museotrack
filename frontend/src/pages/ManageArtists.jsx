@@ -6,13 +6,14 @@ import styles from "../styles/SupervisorHomepage.module.css";
 import api from "../api/client";
 
 const ManageArtists = () => {
+  // these are our states for this component
   const [artists, setArtists] = useState([]);
   const [artifacts, setArtifacts] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [showAddModal, setShowAddModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [editArtist, setEditArtist] = useState(null);
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState({ // sets each value as blank as the initial state
     date_of_birth: "",
     first_name: "",
     middle_name: "",
@@ -20,8 +21,10 @@ const ManageArtists = () => {
     selectedArtifacts: []
   });
 
+  // logged in user's email
   const supervisorEmail = localStorage.getItem("email");
 
+  // makes a call to the backend api endpoint get-artists/ to fetch artist data
   const fetchArtists = async () => {
     try {
       const res = await api.get("/get-artists/");
@@ -31,6 +34,7 @@ const ManageArtists = () => {
     }
   };
 
+  // fetches artist data by making an api call to get-artifacts-for-artist/
   const fetchArtifacts = async () => {
     try {
       const res = await api.get("/get-artifacts-for-artist/", {

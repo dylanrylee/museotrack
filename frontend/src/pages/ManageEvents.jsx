@@ -6,6 +6,7 @@ import styles from "../styles/SupervisorHomepage.module.css";
 import api from "../api/client";
 
 const ManageEvents = () => {
+  // these are our required states for this component
   const [events, setEvents] = useState([]);
   const [exhibitOptions, setExhibitOptions] = useState([]);
   const [showModal, setShowModal] = useState(false);
@@ -18,9 +19,11 @@ const ManageEvents = () => {
   const [formData, setFormData] = useState({ name: "", start_date: "", end_date: "", exid: "" });
   const [editData, setEditData] = useState({ evid: "", name: "", start_date: "", end_date: "", exid: "" });
 
+  // this is the saved museum address from the local storage
   const supervisorMuseumAddress = localStorage.getItem("museumAddress");
   const today = new Date().toISOString().split("T")[0];
 
+  // makes a backend endpoint api call to get-events/ to fetch data
   const fetchEvents = async () => {
     try {
       const res = await api.get("/get-events/", {
@@ -32,6 +35,7 @@ const ManageEvents = () => {
     }
   };
 
+  // this fetches exhivits data by making an api call to get-exhibits/
   const fetchExhibits = async () => {
     try {
       const res = await api.get("/get-exhibits/", {
@@ -43,6 +47,7 @@ const ManageEvents = () => {
     }
   };
 
+  // this fetches event reviews by making an api call to get-event-reviews/
   const fetchEventReviews = async (event) => {
     try {
       const res = await api.get("/get-event-reviews/", {
@@ -51,7 +56,7 @@ const ManageEvents = () => {
       setSelectedEvent(event);
       setEventReviews(res.data.reviews || []);
       if (res.data.reviews?.length) {
-        const avg =
+        const avg = // calculates average rating of event if there exists ratings / reviews for the selected event
           res.data.reviews.reduce((sum, r) => sum + r.rating, 0) /
           res.data.reviews.length;
         setAverageRating(avg.toFixed(1));
@@ -80,6 +85,7 @@ const ManageEvents = () => {
     setEditData((prev) => ({ ...prev, [name]: value }));
   };
 
+  // calls the api endpoint add-event to insert event data into the MySQL database
   const handleAddEvent = async (e) => {
     e.preventDefault();
     try {
@@ -99,6 +105,7 @@ const ManageEvents = () => {
     setShowEditModal(true);
   };
 
+  // this calls the backend api update-event/ to update the data
   const handleUpdateEvent = async (e) => {
     e.preventDefault();
     try {
@@ -110,6 +117,7 @@ const ManageEvents = () => {
     }
   };
 
+  // calls the backend endpoint api delete-event/ to delete data
   const handleDeleteEvent = async () => {
     try {
       await api.post("/delete-event/", { evid: editData.evid });
@@ -120,6 +128,7 @@ const ManageEvents = () => {
     }
   };
 
+  // filters the events
   const filteredEvents = events.filter((ev) =>
     Object.values(ev).some((val) => String(val).toLowerCase().includes(searchTerm.toLowerCase()))
   );

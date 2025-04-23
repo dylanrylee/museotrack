@@ -7,6 +7,7 @@ import api from "../api/client";
 import { FaStar } from "react-icons/fa";
 
 const BrowseArtifacts = () => {
+  // These are our required states for this component
   const [artifacts, setArtifacts] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [modalOpen, setModalOpen] = useState(false);
@@ -18,8 +19,11 @@ const BrowseArtifacts = () => {
   const [artifactReviews, setArtifactReviews] = useState([]);
   const [averageRating, setAverageRating] = useState(null);
 
+  // this is the saved email from the login
   const email = localStorage.getItem("email");
 
+  // this fetches the artifacts by calling the
+  // get-all-artifacts api route from the backend
   const fetchArtifacts = async () => {
     try {
       const res = await api.get("/get-all-artifacts/");
@@ -33,6 +37,7 @@ const BrowseArtifacts = () => {
     fetchArtifacts();
   }, []);
 
+  // this sets the rating as 0, set review desc as blank, set modal as open
   const handleOpenReviewModal = (artifact) => {
     setSelectedArtifact(artifact);
     setRating(0);
@@ -40,15 +45,17 @@ const BrowseArtifacts = () => {
     setModalOpen(true);
   };
 
+  // this handles view reviews for the artifact
   const handleViewReviews = async (artifact) => {
     try {
+      // calls the backend endpoint route for get_artifact_reviews function
       const res = await api.get("/get-artifact-reviews/", {
-        params: { artid: artifact.artid },
+        params: { artid: artifact.artid }, // input params for the api call
       });
-      setSelectedArtifact(artifact);
+      setSelectedArtifact(artifact); 
       setArtifactReviews(res.data.reviews || []);
       if (res.data.reviews?.length) {
-        const avg = (
+        const avg = ( // calculates the average rating for the artifact if there are reviews present
           res.data.reviews.reduce((sum, r) => sum + r.rating, 0) /
           res.data.reviews.length
         ).toFixed(1);
@@ -63,10 +70,12 @@ const BrowseArtifacts = () => {
     }
   };
 
+  // handles the submitting reviews
   const handleSubmitReview = async () => {
     if (!email || !selectedArtifact) return;
     try {
-      await api.post("/submit-artifact-review/", {
+      // makes an api backend route call to submit_artifact_review function
+      await api.post("/submit-artifact-review/", { // these are our input params for the api call
         email,
         artid: selectedArtifact.artid,
         rating,
@@ -80,6 +89,8 @@ const BrowseArtifacts = () => {
     }
   };
 
+  // this filters all the artifacts based on the input in the text field
+  // this filters by artid, name, and description
   const filteredArtifacts = artifacts.filter((artifact) =>
     `${artifact.artid} ${artifact.name} ${artifact.description}`
       .toLowerCase()

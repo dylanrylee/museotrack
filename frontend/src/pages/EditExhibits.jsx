@@ -6,6 +6,7 @@ import styles from "../styles/SupervisorHomepage.module.css";
 import api from "../api/client";
 
 const EditExhibits = () => {
+  // these are our states for this component
   const [exhibits, setExhibits] = useState([]);
   const [showEditModal, setShowEditModal] = useState(false);
   const [editData, setEditData] = useState({ exid: "", newName: "" });
@@ -40,6 +41,7 @@ const EditExhibits = () => {
     fetchEmployeeMuseumExhibits();
   }, [email]);
 
+  // calls the api backend endpoint get-exhibits/ to fetch exhibits data
   const fetchExhibits = async (address) => {
     try {
       const res = await api.get("/get-exhibits/", {
@@ -51,6 +53,7 @@ const EditExhibits = () => {
     }
   };
 
+  // sets edit data as such
   const handleEditChange = (e) => {
     const { name, value } = e.target;
     setEditData((prev) => ({ ...prev, [name]: value }));
@@ -61,6 +64,7 @@ const EditExhibits = () => {
     setShowEditModal(true);
   };
 
+  // calls the update-exhibit/ api backend endpoint to update the exhibit data
   const handleUpdateExhibit = async (e) => {
     e.preventDefault();
     try {
@@ -83,7 +87,7 @@ const EditExhibits = () => {
     }
   };
   
-
+  // filters exhibit data
   const filteredExhibits = exhibits.filter((ex) =>
     `${ex.exid} ${ex.name}`.toLowerCase().includes(searchTerm.toLowerCase())
   );
