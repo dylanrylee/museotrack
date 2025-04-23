@@ -1,3 +1,6 @@
+# MuseoTrack
+### Created by Dylan Dizon, Keenan Hanaerin-Balczer, and Anmol Ratol
+
 Starting the whole application
 
 ```
