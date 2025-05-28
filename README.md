@@ -1,5 +1,27 @@
-# MuseoTrack
+# MuseoTrack – Museums & Artifacts Web App
 ### Created by Dylan Dizon, Keenan Hanaerin-Balczer, and Anmol Ratol
+
+MuseoTrack is a full-stack museum management system built to streamline operations for museum staff while enhancing the experience for visitors. The platform supports multiple user roles — supervisors, employees, and visitors — and enables secure interactions such as artifact management, exhibit planning, and user reviews.
+
+🔧 Tech Stack
+Frontend: React, JavaScript, HTML/CSS
+
+Backend: Django (REST API with raw SQL), MySQL
+
+Authentication: JWT-based authentication for role-specific access
+
+💡 Key Features
+🔐 Multi-role login system (Visitor, Employee, Supervisor) with secure JWT authentication
+
+🖼️ CRUD operations for managing artifacts, events, exhibits, and artists
+
+🧠 Data planning with EER diagrams, relational schemas, and DFDs before implementation
+
+📊 Backend powered by 30+ raw SQL endpoints across 8+ relational tables with cascade rules
+
+🔄 Seamless React-to-Django integration using axios for real-time UI updates
+
+📝 Review system for artifacts and events with star ratings and modal-based UI
 
 Starting the whole application
 
