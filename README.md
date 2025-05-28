@@ -23,6 +23,7 @@ Authentication: JWT-based authentication for role-specific access
 
 📝 Review system for artifacts and events with star ratings and modal-based UI
 
+---
 Starting the whole application
 
 ```
