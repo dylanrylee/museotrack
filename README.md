@@ -1,4 +1,4 @@
-# MuseoTrack – Museums & Artifacts Web App
+# MuseoTrack – Museums & Artifacts Website
 ### Created by Dylan Dizon, Keenan Hanaerin-Balczer, and Anmol Ratol
 
 MuseoTrack is a full-stack museum management system built to streamline operations for museum staff while enhancing the experience for visitors. The platform supports multiple user roles — supervisors, employees, and visitors — and enables secure interactions such as artifact management, exhibit planning, and user reviews.
