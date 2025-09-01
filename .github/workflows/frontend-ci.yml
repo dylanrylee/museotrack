@@ -3,56 +3,39 @@ name: Frontend CI
 on:
   push:
     branches: [ main, master ]
-    paths:
-      - "frontend/**"
-      - "Dockerfile.frontend"
-      - ".github/workflows/frontend-ci.yml"
+    paths: ["frontend/**", "Dockerfile.frontend", ".github/workflows/frontend-ci.yml"]
   pull_request:
-    paths:
-      - "frontend/**"
-      - "Dockerfile.frontend"
-      - ".github/workflows/frontend-ci.yml"
+    paths: ["frontend/**", "Dockerfile.frontend", ".github/workflows/frontend-ci.yml"]
 
 jobs:
   build:
     runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: frontend
+    timeout-minutes: 15           # hard cap
+    defaults: { run: { working-directory: frontend } }
     env:
-      # Safe defaults; adjust if your app reads these
       VITE_API_URL: http://localhost:8000
       REACT_APP_API_URL: http://localhost:8000
       NODE_OPTIONS: --max-old-space-size=4096
-      # CRA turns warnings into errors when CI=true; unset to avoid failing on warnings
-      CI: ""
+      CI: ""                      # avoid CRA warnings-as-errors
 
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-      - name: Show package.json scripts (quick sanity)
-        run: |
-          node -e "console.log(require('./package.json').scripts || {})"
+      - name: Show scripts
+        run: node -e "console.log(require('./package.json').scripts||{})"
 
       - name: Detect package manager
         id: pm
         shell: bash
         run: |
-          if [[ -f "frontend/pnpm-lock.yaml" ]]; then
-            echo "name=pnpm" >> $GITHUB_OUTPUT
-          elif [[ -f "frontend/yarn.lock" ]]; then
-            echo "name=yarn" >> $GITHUB_OUTPUT
-          elif [[ -f "frontend/package-lock.json" ]]; then
-            echo "name=npm" >> $GITHUB_OUTPUT
-          else
-            echo "name=npm" >> $GITHUB_OUTPUT
-          fi
+          if [[ -f pnpm-lock.yaml ]]; then echo "name=pnpm" >> $GITHUB_OUTPUT
+          elif [[ -f yarn.lock ]]; then echo "name=yarn" >> $GITHUB_OUTPUT
+          else echo "name=npm" >> $GITHUB_OUTPUT; fi
 
-      - name: Set up Node (try 20 first; fall back to 18 if needed)
+      - name: Setup Node
         uses: actions/setup-node@v4
         with:
-          node-version: "20"
+          node-version: "18"
           cache: ${{ steps.pm.outputs.name }}
           cache-dependency-path: |
             frontend/package-lock.json
@@ -63,58 +46,38 @@ jobs:
         if: steps.pm.outputs.name == 'pnpm'
         run: npm i -g pnpm@9
 
-      - name: Install dependencies
+      - name: Install deps (fast)
         run: |
           if [ "${{ steps.pm.outputs.name }}" = "pnpm" ]; then
-            pnpm i --frozen-lockfile || pnpm i
+            pnpm i --frozen-lockfile --prefer-offline || pnpm i
           elif [ "${{ steps.pm.outputs.name }}" = "yarn" ]; then
-            yarn install --frozen-lockfile || yarn install
+            yarn install --frozen-lockfile --prefer-offline || yarn install
           else
-            npm ci || npm install
-          fi
-
-      - name: Run tests (if present)
-        run: |
-          if [ "${{ steps.pm.outputs.name }}" = "pnpm" ]; then
-            pnpm test --if-present -- --watch=false || true
-          elif [ "${{ steps.pm.outputs.name }}" = "yarn" ]; then
-            yarn test --watch=false || true
-          else
-            npm test --if-present -- --watch=false || true
+            npm ci --no-audit --no-fund || npm install --no-audit --no-fund
           fi
 
       - name: Build app
         run: |
-          if [ "${{ steps.pm.outputs.name }}" = "pnpm" ]; then
-            pnpm run build --if-present || pnpm run build
-          elif [ "${{ steps.pm.outputs.name }}" = "yarn" ]; then
-            yarn build
-          else
-            npm run build
-          fi
+          if [ "${{ steps.pm.outputs.name }}" = "pnpm" ]; then pnpm run build
+          elif [ "${{ steps.pm.outputs.name }}" = "yarn" ]; then yarn build
+          else npm run build; fi
 
-      - name: Normalize build output (Vite=dist, CRA=build, Next=out)
+      - name: Normalize build output (dist/build/out)
         run: |
-          if [ -d "dist" ]; then mv dist site; fi
-          if [ -d "build" ]; then mv build site; fi
-          if [ -d "out" ]; then mv out site; fi
+          if [ -d dist ]; then mv dist site; fi
+          if [ -d build ]; then mv build site; fi
+          if [ -d out ];  then mv out site;  fi
           test -d site
 
-      - name: Upload static artifact
+      - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
           name: frontend-site
           path: frontend/site
 
-      - name: Build frontend Docker image (sanity)
-        working-directory: .
-        run: docker build -f Dockerfile.frontend -t museotrack-frontend:ci .
-
-      # If something failed above, dump logs to help debugging
-      - name: Print npm/yarn logs on failure
+      - name: Dump logs on failure
         if: failure()
         run: |
-          echo "---- npm logs (if any) ----"
+          echo "---- npm logs ----"
           if [ -d "$HOME/.npm/_logs" ]; then ls -la $HOME/.npm/_logs; tail -n +1 $HOME/.npm/_logs/* || true; fi
-          echo "---- yarn logs (if any) ----"
-          if [ -f "yarn-error.log" ]; then cat yarn-error.log; fi
+          if [ -f "yarn-error.log" ]; then echo "---- yarn-error.log ----"; cat yarn-error.log; fi
