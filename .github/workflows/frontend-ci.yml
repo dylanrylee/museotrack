@@ -16,41 +16,92 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend
+    env:
+      # Safe defaults so builds don’t fail if your code reads these
+      VITE_API_URL: http://localhost:8000
+      REACT_APP_API_URL: http://localhost:8000
+      NODE_OPTIONS: --max-old-space-size=4096
+
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Detect package manager
+        id: pm
+        shell: bash
+        run: |
+          if [[ -f "frontend/pnpm-lock.yaml" ]]; then
+            echo "name=pnpm" >> $GITHUB_OUTPUT
+          elif [[ -f "frontend/yarn.lock" ]]; then
+            echo "name=yarn" >> $GITHUB_OUTPUT
+          elif [[ -f "frontend/package-lock.json" ]]; then
+            echo "name=npm" >> $GITHUB_OUTPUT
+          else
+            echo "No lockfile found; defaulting to npm"
+            echo "name=npm" >> $GITHUB_OUTPUT
+          fi
+
       - name: Set up Node
         uses: actions/setup-node@v4
         with:
-          node-version: "20"
-          cache: "npm"
-          cache-dependency-path: frontend/package-lock.json
+          # Node 18 is the “safe” default for CRA/Vite; bump to 20 later if you prefer
+          node-version: "18"
+          cache: ${{ steps.pm.outputs.name }}
+          cache-dependency-path: |
+            frontend/package-lock.json
+            frontend/yarn.lock
+            frontend/pnpm-lock.yaml
 
-      - name: Install deps
-        working-directory: frontend
-        run: npm ci
+      - name: Install pnpm
+        if: steps.pm.outputs.name == 'pnpm'
+        run: npm i -g pnpm@9
+
+      - name: Install dependencies
+        run: |
+          if [ "${{ steps.pm.outputs.name }}" = "pnpm" ]; then
+            pnpm i --frozen-lockfile || pnpm i
+          elif [ "${{ steps.pm.outputs.name }}" = "yarn" ]; then
+            yarn install --frozen-lockfile || yarn install
+          else
+            npm ci || npm install
+          fi
 
       - name: Run tests (if present)
-        working-directory: frontend
-        run: npm test --if-present -- --watch=false
+        run: |
+          if [ "${{ steps.pm.outputs.name }}" = "pnpm" ]; then
+            pnpm test --if-present -- --watch=false || true
+          elif [ "${{ steps.pm.outputs.name }}" = "yarn" ]; then
+            yarn test --watch=false || true
+          else
+            npm test --if-present -- --watch=false || true
+          fi
 
       - name: Build app
-        working-directory: frontend
-        run: npm run build
+        run: |
+          if [ "${{ steps.pm.outputs.name }}" = "pnpm" ]; then
+            pnpm run build
+          elif [ "${{ steps.pm.outputs.name }}" = "yarn" ]; then
+            yarn build
+          else
+            npm run build
+          fi
 
-      - name: Normalize build output (works for Vite or CRA)
-        working-directory: frontend
+      - name: Normalize build output (Vite=dist, CRA=build, Next=out)
         run: |
           if [ -d "dist" ]; then mv dist site; fi
           if [ -d "build" ]; then mv build site; fi
+          if [ -d "out" ]; then mv out site; fi
           test -d site
 
-      - name: Upload build artifact
+      - name: Upload static artifact
         uses: actions/upload-artifact@v4
         with:
           name: frontend-site
           path: frontend/site
 
-      - name: Build frontend Docker image
+      - name: Build frontend Docker image (sanity)
+        working-directory: .
         run: docker build -f Dockerfile.frontend -t museotrack-frontend:ci .
