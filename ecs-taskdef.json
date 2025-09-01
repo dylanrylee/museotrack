@@ -1,0 +1,37 @@
+{
+  "family": "museotrack-task",
+  "networkMode": "awsvpc",
+  "requiresCompatibilities": ["FARGATE"],
+  "cpu": "512",
+  "memory": "1024",
+  "executionRoleArn": "arn:aws:iam::981986259169:role/MuseoTrack-ECSTaskExecutionRole",
+  "taskRoleArn": "arn:aws:iam::981986259169:role/MuseoTrack-ECSTaskRole",
+  "containerDefinitions": [
+    {
+      "name": "backend",
+      "image": "981986259169.dkr.ecr.us-east-2.amazonaws.com/museotrack-backend:latest",
+      "portMappings": [{ "containerPort": 8000, "protocol": "tcp" }],
+      "essential": true,
+      "environment": [
+        { "name": "DJANGO_SETTINGS_MODULE", "value": "yourproject.settings" }
+      ],
+      "secrets": [
+        { "name": "DB_HOST",       "valueFrom": "arn:aws:ssm:us-east-2:981986259169:parameter/museotrack/prod/DB_HOST" },
+        { "name": "DB_NAME",       "valueFrom": "arn:aws:ssm:us-east-2:981986259169:parameter/museotrack/prod/DB_NAME" },
+        { "name": "DB_USER",       "valueFrom": "arn:aws:ssm:us-east-2:981986259169:parameter/museotrack/prod/DB_USER" },
+        { "name": "DB_PASSWORD",   "valueFrom": "arn:aws:ssm:us-east-2:981986259169:parameter/museotrack/prod/DB_PASSWORD" },
+        { "name": "SECRET_KEY",    "valueFrom": "arn:aws:ssm:us-east-2:981986259169:parameter/museotrack/prod/SECRET_KEY" },
+        { "name": "ALLOWED_HOSTS", "valueFrom": "arn:aws:ssm:us-east-2:981986259169:parameter/museotrack/prod/ALLOWED_HOSTS" }
+      ],
+      "logConfiguration": {
+        "logDriver": "awslogs",
+        "options": {
+          "awslogs-group": "/ecs/museotrack",
+          "awslogs-region": "us-east-2",
+          "awslogs-stream-prefix": "backend"
+        }
+      },
+      "command": ["gunicorn","yourproject.wsgi:application","--bind","0.0.0.0:8000","--workers","3","--timeout","90"]
+    }
+  ]
+}
