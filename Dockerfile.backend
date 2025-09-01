@@ -1,0 +1,27 @@
+# Dockerfile.backend
+FROM python:3.11-slim
+
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1 \
+    PIP_DISABLE_PIP_VERSION_CHECK=1
+
+WORKDIR /app
+
+# OS deps for mysqlclient and Pillow
+RUN apt-get update && apt-get install -y \
+    build-essential default-libmysqlclient-dev pkg-config \
+    && rm -rf /var/lib/apt/lists/*
+
+# Install Python deps
+COPY backend/requirements.txt /app/requirements.txt
+RUN pip install --no-cache-dir -r /app/requirements.txt \
+    && pip install --no-cache-dir gunicorn mysqlclient
+
+# App code
+COPY backend /app
+
+# Expose port for Gunicorn
+EXPOSE 8000
+
+# Gunicorn entrypoint
+CMD ["gunicorn", "backend.wsgi:application", "--bind", "0.0.0.0:8000", "--workers", "3"]

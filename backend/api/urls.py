@@ -1,8 +1,15 @@
 from django.contrib import admin
 from django.urls import path
+from django.http import JsonResponse
 from .views import *
 
+def health(_request):
+    return JsonResponse({"status": "ok"})
+
 urlpatterns = [
+
+    path("health/", health),
+
     path('login-visitor/', login_visitor),  # Visitor login
     path('register-visitor/', register_visitor),  # Visitor registration
     path('browse-visited-museums/', browse_visited_museums),  # View museums visited by the visitor
