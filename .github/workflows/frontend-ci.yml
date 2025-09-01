@@ -1,83 +1,60 @@
-name: Frontend CI
+name: Frontend CD
 
 on:
   push:
-    branches: [ main, master ]
-    paths: ["frontend/**", "Dockerfile.frontend", ".github/workflows/frontend-ci.yml"]
-  pull_request:
-    paths: ["frontend/**", "Dockerfile.frontend", ".github/workflows/frontend-ci.yml"]
+    branches: [ "main" ]
+    paths:
+      - "frontend/**"
+      - ".github/workflows/frontend-cd.yml"
+
+permissions:
+  id-token: write
+  contents: read
+
+env:
+  AWS_REGION: us-east-2
+  S3_BUCKET: museotrack-web-981986259169
+  CF_DISTRIBUTION_ID: E2B4OT8PMH2IU4
 
 jobs:
-  build:
+  deploy:
     runs-on: ubuntu-latest
-    timeout-minutes: 15           # hard cap
-    defaults: { run: { working-directory: frontend } }
-    env:
-      VITE_API_URL: http://localhost:8000
-      REACT_APP_API_URL: http://localhost:8000
-      NODE_OPTIONS: --max-old-space-size=4096
-      CI: ""                      # avoid CRA warnings-as-errors
-
     steps:
       - uses: actions/checkout@v4
 
-      - name: Show scripts
-        run: node -e "console.log(require('./package.json').scripts||{})"
-
-      - name: Detect package manager
-        id: pm
-        shell: bash
-        run: |
-          if [[ -f pnpm-lock.yaml ]]; then echo "name=pnpm" >> $GITHUB_OUTPUT
-          elif [[ -f yarn.lock ]]; then echo "name=yarn" >> $GITHUB_OUTPUT
-          else echo "name=npm" >> $GITHUB_OUTPUT; fi
-
-      - name: Setup Node
-        uses: actions/setup-node@v4
+      - uses: actions/setup-node@v4
         with:
-          node-version: "18"
-          cache: ${{ steps.pm.outputs.name }}
-          cache-dependency-path: |
-            frontend/package-lock.json
-            frontend/yarn.lock
-            frontend/pnpm-lock.yaml
+          node-version: 20
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
 
-      - name: Install pnpm
-        if: steps.pm.outputs.name == 'pnpm'
-        run: npm i -g pnpm@9
-
-      - name: Install deps (fast)
+      - name: Install & Build
+        working-directory: frontend
         run: |
-          if [ "${{ steps.pm.outputs.name }}" = "pnpm" ]; then
-            pnpm i --frozen-lockfile --prefer-offline || pnpm i
-          elif [ "${{ steps.pm.outputs.name }}" = "yarn" ]; then
-            yarn install --frozen-lockfile --prefer-offline || yarn install
-          else
-            npm ci --no-audit --no-fund || npm install --no-audit --no-fund
-          fi
+          npm ci
+          npm run build
 
-      - name: Build app
-        run: |
-          if [ "${{ steps.pm.outputs.name }}" = "pnpm" ]; then pnpm run build
-          elif [ "${{ steps.pm.outputs.name }}" = "yarn" ]; then yarn build
-          else npm run build; fi
-
-      - name: Normalize build output (dist/build/out)
-        run: |
-          if [ -d dist ]; then mv dist site; fi
-          if [ -d build ]; then mv build site; fi
-          if [ -d out ];  then mv out site;  fi
-          test -d site
-
-      - name: Upload artifact
-        uses: actions/upload-artifact@v4
+      - name: Configure AWS credentials (OIDC)
+        uses: aws-actions/configure-aws-credentials@v4
         with:
-          name: frontend-site
-          path: frontend/site
+          role-to-assume: arn:aws:iam::981986259169:role/MuseoTrack-FrontendDeployRole
+          aws-region: ${{ env.AWS_REGION }}
 
-      - name: Dump logs on failure
-        if: failure()
+      - name: Upload static assets (hashed) with long cache
         run: |
-          echo "---- npm logs ----"
-          if [ -d "$HOME/.npm/_logs" ]; then ls -la $HOME/.npm/_logs; tail -n +1 $HOME/.npm/_logs/* || true; fi
-          if [ -f "yarn-error.log" ]; then echo "---- yarn-error.log ----"; cat yarn-error.log; fi
+          aws s3 cp frontend/dist/ s3://$S3_BUCKET/ --recursive \
+            --exclude "index.html" \
+            --cache-control "public, max-age=31536000, immutable" \
+            --metadata-directive REPLACE
+
+      - name: Upload index.html with no-cache
+        run: |
+          aws s3 cp frontend/dist/index.html s3://$S3_BUCKET/index.html \
+            --cache-control "no-cache, no-store, must-revalidate" \
+            --metadata-directive REPLACE
+
+      - name: Invalidate CloudFront
+        run: |
+          aws cloudfront create-invalidation \
+            --distribution-id $CF_DISTRIBUTION_ID \
+            --paths "/*"
