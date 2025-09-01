@@ -7,7 +7,7 @@ import api from "../api/client";
 import { FaStar } from "react-icons/fa";
 
 const BrowseArtifacts = () => {
-  // These are our required states for this component
+  // These are our required states for this component //
   const [artifacts, setArtifacts] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [modalOpen, setModalOpen] = useState(false);
