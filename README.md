@@ -1,6 +1,6 @@
 # MuseoTrack – Museums/Artifacts Tracking System
 
-MuseoTrack is a full-stack museum management system built to streamline operations for museum staff while enhancing the experience for visitors. The platform supports multiple user roles like supervisors, employees, and visitors. It enables secure interactions such as artifact management, exhibit planning, and user reviews.
+A museum management system built to streamline operations for museum staff while enhancing the experience for visitors. The platform supports multiple user roles like supervisors, employees, and visitors. It enables secure interactions such as artifact management, exhibit planning, and user reviews.
 
 ### Tech Stack
 Frontend: React, JavaScript, HTML/CSS
