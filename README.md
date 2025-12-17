@@ -3,13 +3,9 @@
 A museum management system built to streamline operations for museum staff while enhancing the experience for visitors. The platform supports multiple user roles like supervisors, employees, and visitors. It enables secure interactions such as artifact management, exhibit planning, and user reviews.
 
 ### Tech Stack
-Frontend: React, JavaScript, HTML/CSS
+React, Django (SQL query-based REST API), MySQL, Docker, AWS, GitHub Actions
 
-Backend: Django (REST API with raw SQL), MySQL
-
-Authentication: JWT-based authentication for role-specific access
-
-### Key Features
+### Features
 - Multi-role login system (Visitor, Employee, Supervisor) with secure JWT authentication
 - CRUD operations for managing artifacts, events, exhibits, and artists
 - Data planning with EER diagrams, relational schemas, and DFDs before implementation
